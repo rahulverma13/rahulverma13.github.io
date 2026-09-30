@@ -147,7 +147,7 @@ const INIT = { theta: 35, ext: 60 };
     const extIn = $<HTMLInputElement>('[data-ext]');
     const set = (el: Element, a: Record<string, string | number>) => Object.entries(a).forEach(([k, v]) => el.setAttribute(k, String(v)));
     const M = MASS.reduce((a, b) => a + b, 0);
-    const G = 130; // pixel length of the gravity vector
+    const G = 178; // pixel length of the gravity vector
     const maxReach = 3 * STEP + LEN;
     // x_cm when fully extended — used to normalize the torque readout
     const xcm = (e: number) => MASS.reduce((s, m, k) => s + m * (k * e + LEN / 2), 0) / M;
