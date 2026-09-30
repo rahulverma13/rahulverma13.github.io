@@ -73,7 +73,7 @@ const { cols = 2, align = 'start', template, fit = false } = Astro.props;
       return { top, h: bottom - top, gw: g.width };
     };
     const gw = grid.getBoundingClientRect().width;
-    let lo = 180, hi = gw * 0.4;
+    let lo = 140, hi = gw * 0.4;
     for (let i = 0; i < 14; i++) {
       const mid = (lo + hi) / 2;
       const { h } = measure(mid);
