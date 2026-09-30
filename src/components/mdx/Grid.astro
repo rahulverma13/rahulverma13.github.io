@@ -1,22 +1,101 @@
 ---
 // Lays out figures (or anything) side by side. Collapses to one column on phones.
 // template: custom column sizes, e.g. "1fr 260px" (text + narrow vertical video)
-interface Props { cols?: 2 | 3 | 4; align?: 'start' | 'center' | 'end' | 'stretch'; template?: string }
-const { cols = 2, align = 'start', template } = Astro.props;
+// fit: size the right-hand video/photo so its top lines up with the first heading's text
+//      and its bottom with the last line of text (the template width is the no-JS fallback)
+interface Props { cols?: 2 | 3 | 4; align?: 'start' | 'center' | 'end' | 'stretch'; template?: string; fit?: boolean }
+const { cols = 2, align = 'start', template, fit = false } = Astro.props;
 ---
-<div class:list={["grid", { "grid--custom": !!template }]} style={`--cols:${cols};align-items:${align};${template ? `--tpl:${template}` : ""}`}>
+<div
+  class:list={['grid', { 'grid--custom': !!template, 'grid--fit': fit }]}
+  style={`--cols:${cols};align-items:${align};${template ? `--tpl:${template}` : ''}`}
+  data-fit={fit ? '' : undefined}
+>
   <slot />
 </div>
 
 <style>
   .grid { display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); gap: 18px; margin: 28px 0; }
   .grid > :global(.fig) { margin: 0; }
-  .grid > :global(div > p:first-child), .grid > :global(div > h3:first-child), .grid > :global(div > h2:first-child) { margin-top: 0; }
+  .grid > :global(div > :first-child) { margin-top: 0; }
+  .grid > :global(div > :last-child) { margin-bottom: 0; }
   :global(.prose) > .grid:first-child { margin-top: 0; }
-  .grid--custom { grid-template-columns: var(--tpl); }
+  .grid--custom { grid-template-columns: var(--tpl); column-gap: 28px; }
+  .grid--fit > :global(:last-child) { justify-self: end; }
   @media (max-width: 720px) {
     .grid { grid-template-columns: 1fr; }
     .grid--custom > :global(.fig) { width: 100%; max-width: 300px; margin-inline: auto; }
+    .grid--fit > :global(:last-child) { justify-self: center; }
   }
   @media (min-width: 721px) and (max-width: 1000px) { .grid:not(.grid--custom) { grid-template-columns: repeat(min(var(--cols), 2), minmax(0, 1fr)); } }
 </style>
+
+<script>
+  // Fit a side video/photo to the height of the text beside it.
+  const phone = window.matchMedia('(max-width: 720px)');
+  const grids = [...document.querySelectorAll<HTMLElement>('[data-fit]')];
+
+  const ratioOf = (el: HTMLElement) => {
+    const r = getComputedStyle(el).aspectRatio; // e.g. "9 / 16" or "auto 2 / 3"
+    const m = r.match(/([\d.]+)\s*\/\s*([\d.]+)/);
+    return m ? Number(m[1]) / Number(m[2]) : 9 / 16;
+  };
+
+  const fit = (grid: HTMLElement) => {
+    const text = grid.firstElementChild as HTMLElement | null;
+    const media = grid.lastElementChild as HTMLElement | null;
+    const frame = media?.querySelector<HTMLElement>('.video__frame, .fig__frame');
+    if (!text || !media || !frame || text === media) return;
+
+    if (phone.matches) {
+      grid.style.gridTemplateColumns = '';
+      media.style.marginTop = '';
+      media.style.width = '';
+      frame.style.width = frame.style.height = frame.style.maxWidth = '';
+      return;
+    }
+    const ratio = frame.dataset.ratio ? Number(frame.dataset.ratio) : ratioOf(frame);
+    frame.dataset.ratio = String(ratio);
+    frame.style.maxWidth = 'none';
+
+    // Find the width where the media height equals the text height. Widening the media
+    // narrows the text (making it taller), so search for the balance point by bisection.
+    const measure = (w: number) => {
+      grid.style.gridTemplateColumns = `minmax(0, 1fr) ${Math.round(w)}px`;
+      media.style.width = `${Math.round(w)}px`;
+      const g = grid.getBoundingClientRect();
+      const first = text.firstElementChild as HTMLElement;
+      const last = text.lastElementChild as HTMLElement;
+      const fs = getComputedStyle(first);
+      const lineGap = (parseFloat(fs.lineHeight) - parseFloat(fs.fontSize)) / 2 || 0;
+      const top = first.getBoundingClientRect().top - g.top + parseFloat(fs.paddingTop) + Math.max(lineGap, 0) + 2;
+      const bottom = last.getBoundingClientRect().bottom - g.top;
+      return { top, h: bottom - top, gw: g.width };
+    };
+    const gw = grid.getBoundingClientRect().width;
+    let lo = 180, hi = gw * 0.4;
+    for (let i = 0; i < 14; i++) {
+      const mid = (lo + hi) / 2;
+      const { h } = measure(mid);
+      if (h * ratio > mid) lo = mid; else hi = mid;
+    }
+    const w = Math.round((lo + hi) / 2);
+    const { top } = measure(w);
+    const fh = w / ratio;
+    media.style.marginTop = `${Math.round(top)}px`;
+    frame.style.width = `${w}px`;
+    frame.style.height = `${Math.round(fh)}px`;
+  };
+
+  const fitAll = () => grids.forEach(fit);
+  if (grids.length) {
+    fitAll();
+    document.fonts?.ready.then(fitAll);
+    window.addEventListener('load', fitAll);
+    let raf = 0;
+    window.addEventListener('resize', () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(fitAll);
+    });
+  }
+</script>

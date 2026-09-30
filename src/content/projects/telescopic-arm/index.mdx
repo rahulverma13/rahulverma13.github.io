@@ -25,7 +25,7 @@ links:
   - { label: Arm assembly (video), href: "https://www.youtube.com/shorts/D64In4TDJXU", kind: Video }
 ---
 
-<Grid template="minmax(0, 1fr) 336px" align="start">
+<Grid template="minmax(0, 1fr) 336px" align="start" fit>
 <div>
 
 ## Overview
@@ -35,8 +35,6 @@ This arm is the main scoring mechanism of an FTC competition robot, and the most
 Instead of buying linear slides, I designed a **boxtube arm**: four nested, pocketed aluminum tubes from **2″ × 2″ down to 0.5″ × 0.5″**. Custom bearing inserts guide each stage, and cascade-strung cord extends all four stages at once.
 
 The hard part was making it **rigid**. Nested square tubes want to wobble, so most of the work was a long iteration loop on the inserts. The other hard part was **control**: an arm whose length changes also changes its center of mass and moment of inertia, which breaks a plain PID loop. I solved that with a gain-scheduled feedforward controller that adapts to the arm's pose in real time.
-
-The result is a 395 g arm that reaches **full extension in 0.4 s** and pivots **90° in 0.25 s**, while staying **4× stiffer** than the off-the-shelf slides it replaced. In the video, it scores game pieces on the full competition robot.
 
 </div>
 <Video id="5_ZiCBP7eeU" title="Telescopic arm scoring on the full competition robot" vertical width="336px" caption="On the full robot" />
@@ -55,7 +53,7 @@ The result is a 395 g arm that reaches **full extension in 0.4 s** and pivots **
 
 <Figure src="telescopic-arm/arm-cad.png" variant="plate" alt="CAD render of the full telescopic arm: pivot axle and spool at the base, four nested pocketed tubes, and pink bearing inserts at each stage" caption="Full arm in CAD, from the 32 mm pivot axle to the 0.5″ final stage" />
 
-<Grid template="minmax(0, 1fr) 236px" align="start">
+<Grid template="minmax(0, 1fr) 236px" align="start" fit>
 <div>
 
 ### Key features
@@ -71,7 +69,7 @@ The result is a 395 g arm that reaches **full extension in 0.4 s** and pivots **
 <Video id="D64In4TDJXU" title="Telescopic arm assembly" vertical width="236px" caption="Arm assembly" />
 </Grid>
 
-<Grid template="minmax(0, 1fr) 220px" align="start">
+<Grid template="minmax(0, 1fr) 220px" align="start" fit>
 <div>
 
 ### Build
@@ -102,15 +100,6 @@ Every stage of the arm rides on custom **bearing inserts**: an *inside* insert f
 - **V2:** larger bearings (4 mm wide, 8 mm OD) for more contact area, a nut capture for the screw, and more printed material around the rods
 
 </div>
-</Grid>
-
-<Grid cols={2} align="center">
-<div>
-
-In the final design, each bearing spins on a **threaded rod that acts as a dead axle**, located by a shim built into the printed insert. The rod holds tight tolerances and, unlike pressed pins, makes the insert easy to assemble and service.
-
-</div>
-<Figure src="telescopic-arm/inside-bearings.png" variant="rounded" alt="Transparent view of an inside insert showing four bearings mounted on threaded rods" caption="Bearings on threaded-rod dead axles" />
 </Grid>
 
 ### Outside bearing inserts

@@ -49,7 +49,7 @@ Every module has one motor to spin the wheel and one servo to steer it. The chal
 
 The heart of this design is how power reaches the wheel. Both the motor and the servo are **mounted to the chassis and never move**, yet the module under them can spin endlessly and slide up and down. That's only possible because everything is **coaxial**, sharing the module's vertical axis. Each module has three power paths:
 
-<Grid cols={2} align="center">
+<Grid cols={2} align="start">
 <Figure src="suspension-swerve/motor-geartrain.png" variant="rounded" alt="CAD close-up of the motor drive path: motor, belt to a vertical shaft, down to the wheel through bevel gears, with other parts shown transparent" caption="Drive path, highlighted in CAD" />
 <div>
 
@@ -62,7 +62,7 @@ The motor drives a timing belt to a central shaft, followed by a pair of spur ge
 </div>
 </Grid>
 
-<Grid cols={2} align="center">
+<Grid cols={2} align="start">
 <div>
 
 <PowerPath start={2} paths={[
@@ -75,7 +75,7 @@ The whole module is constrained inside **one large bearing** and turned by the s
 <Figure src="suspension-swerve/servo-geartrain.png" variant="rounded" alt="CAD close-up of the steering path: servo with an orange gear driving the large module ring gear" caption="Steer path, highlighted in CAD" />
 </Grid>
 
-<Grid cols={2} align="center">
+<Grid cols={2} align="start">
 <Figure src="suspension-swerve/pod-cad.png" variant="plate" ratio="4/5" alt="CAD render of a single module: large ring gear on top, four linear rails with springs around a central shaft, and the wheel below" caption="One module: ring gear, rails, springs and wheel" />
 <div>
 
