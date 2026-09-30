@@ -1,0 +1,285 @@
+---
+import Base from '../layouts/Base.astro';
+import Carousel from '../components/Carousel.astro';
+import ProjectTab from '../components/ProjectTab.astro';
+import site from '../data/site.json';
+import { getCollection } from 'astro:content';
+import { frontmatter as about, Content as AboutText } from '../content/about.md';
+
+const projects = (await getCollection('projects', (p) => p.data.status === 'published')).sort((a, b) => a.data.order - b.data.order);
+const slides = projects.map((p, i) => ({
+  href: `/projects/${p.id}/`,
+  num: `PRJ-${String(i + 1).padStart(2, '0')}`,
+  title: p.data.title,
+  subtitle: p.data.subtitle,
+  image: p.data.cover ?? p.data.hero,
+  alt: p.data.coverAlt ?? p.data.heroAlt,
+  style: p.data.coverStyle ?? p.data.heroStyle,
+}));
+
+const domains = [
+  {
+    key: 'Mechanical',
+    code: 'MECH',
+    text: 'Coaxial swerve modules, tight-tolerance telescoping tubes, suspension and power transmission, all designed in CAD and built with CNC, laser-cut aluminum and 3D printing.',
+  },
+  {
+    key: 'Electrical',
+    code: 'ELEC',
+    text: 'Motors, servos, absolute encoders, accelerometers and control hubs integrated into working robots. Now moving down to the board level with PCB design.',
+  },
+  {
+    key: 'Software',
+    code: 'SOFT',
+    text: 'Kinematics, gain-scheduled feedforward and nonlinear velocity control for robots, plus Python and Bash tooling that benchmarks ML models on a supercomputer.',
+  },
+];
+---
+<Base>
+  <!-- ============ HERO ============ -->
+  <section class="hero">
+    <div class="container hero__grid">
+      <div class="hero__text">
+        <p class="eyebrow hero__eyebrow">{site.eyebrow}</p>
+        <h1 class="hero__name" aria-label={site.name}>
+          <span data-typename aria-hidden="true">{site.name}</span><span class="caret" aria-hidden="true"></span>
+        </h1>
+        <p class="hero__typed" aria-label={`I engineer ${site.typedRoles.join(' ')}`}>
+          <span aria-hidden="true">I engineer <span class="hero__role" data-roles={JSON.stringify(site.typedRoles)}>{site.typedRoles[0]}</span><span class="caret caret--sm"></span></span>
+        </p>
+        <p class="hero__pitch">{site.pitch}</p>
+        <div class="hero__ctas">
+          <a class="btn btn--primary" href="#projects">
+            View projects
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+          </a>
+          <a class="btn" href={site.resume} target="_blank" rel="noopener">Resume (PDF)</a>
+        </div>
+        <dl class="hero__spec">
+          <div><dt>School</dt><dd>UC Berkeley</dd></div>
+          <div><dt>Major</dt><dd>EECS</dd></div>
+          <div><dt>Minor</dt><dd>Mech. Eng.</dd></div>
+          <div><dt>Focus</dt><dd>Robotics · Controls</dd></div>
+        </dl>
+      </div>
+      <div class="hero__media">
+        <Carousel slides={slides} />
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ DOMAINS ============ -->
+  <section class="domains" aria-labelledby="domains-title">
+    <div class="marquee" aria-hidden="true">
+      <div class="marquee__track">
+        {[0, 1].map(() => (
+          <span>
+            CAD <b>/</b> Kinematics <b>/</b> Control Theory <b>/</b> CNC Machining <b>/</b> PCB Design <b>/</b> Power Transmission <b>/</b> Java <b>/</b> Python <b>/</b> C/C++ <b>/</b> PyTorch <b>/</b> Sensors <b>/</b> 3D Printing <b>/</b> SLURM <b>/</b>{' '}
+          </span>
+        ))}
+      </div>
+    </div>
+    <div class="container">
+      <h2 id="domains-title" class="sr-only">Engineering domains</h2>
+      <div class="domains__grid">
+        {domains.map((d, i) => (
+          <article class={`domains__card reveal reveal-delay-${i + 1}`}>
+            <span class="domains__code">{d.code}</span>
+            <h3>{d.key}</h3>
+            <p>{d.text}</p>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PROJECTS ============ -->
+  <section id="projects" class="projects">
+    <div class="container">
+      <header class="section-head reveal">
+        <p class="eyebrow" data-scramble>Selected work</p>
+        <h2>Projects</h2>
+        <p class="section-head__lede">Four builds that go past the standard kit: novel kinematics, heavily iterated mechanisms, and the control software that makes them work. Click any project for the full engineering story.</p>
+      </header>
+      <div class="projects__list">
+        {projects.map((p, i) => <ProjectTab project={p} index={i} />)}
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ABOUT ============ -->
+  <section id="about" class="about">
+    <div class="container">
+      <header class="section-head reveal">
+        <p class="eyebrow" data-scramble>About</p>
+        <h2>{about.headline}</h2>
+      </header>
+      <div class="about__grid">
+        <div class="about__text reveal">
+          <AboutText />
+        </div>
+        <dl class="about__stats reveal reveal-delay-1">
+          {about.stats.map((s: { value: string; label: string }) => (
+            <div>
+              <dt>{s.label}</dt>
+              <dd>{s.value}</dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+
+      <div class="bom reveal">
+        <div class="bom__row bom__row--head" aria-hidden="true">
+          <span>Ref</span><span>Category</span><span>Tools &amp; skills</span>
+        </div>
+        {about.skills.map((s: { category: string; items: string[] }, i: number) => (
+          <div class="bom__row">
+            <span class="bom__ref">S{i + 1}</span>
+            <span class="bom__cat">{s.category}</span>
+            <span class="chip-row">{s.items.map((it) => <span class="chip">{it}</span>)}</span>
+          </div>
+        ))}
+        <div class="bom__row">
+          <span class="bom__ref">C1</span>
+          <span class="bom__cat">Coursework</span>
+          <ul class="bom__list">{about.coursework.map((c: string) => <li>{c}</li>)}</ul>
+        </div>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  /* ---------- hero ---------- */
+  .hero { padding: clamp(40px, 7vw, 96px) 0 clamp(56px, 8vw, 110px); }
+  .hero__grid { display: grid; grid-template-columns: 1.05fr 1fr; gap: clamp(32px, 5vw, 72px); align-items: center; }
+  .hero__eyebrow { margin-bottom: 22px; }
+  .hero__name {
+    font-size: clamp(3.4rem, 9.5vw, 7.4rem);
+    line-height: 0.92;
+    letter-spacing: -0.045em;
+    margin-bottom: 22px;
+    min-height: 1.84em; /* keeps layout still while the name types (two lines on phones) */
+    background: linear-gradient(100deg, #ffffff 35%, var(--accent-2) 70%, var(--accent));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .hero__name .caret { height: 0.78em; width: 0.07em; }
+  .hero__typed { font-family: var(--font-mono); font-size: clamp(1rem, 2vw, 1.25rem); color: var(--text-2); margin-bottom: 18px; min-height: 1.6em; }
+  .hero__role { color: #fff; background: linear-gradient(90deg, rgba(168, 85, 247, 0.25), transparent); padding: 0 4px; border-radius: 4px; }
+  .caret--sm { height: 1em; }
+  .hero__pitch { font-size: clamp(1.02rem, 1.4vw, 1.14rem); color: var(--text-2); max-width: 560px; }
+  .hero__ctas { display: flex; flex-wrap: wrap; gap: 12px; margin: 28px 0 34px; }
+  .hero__spec { display: grid; grid-template-columns: repeat(4, auto); border: 1px dashed var(--line-strong); border-radius: 12px; margin: 0; max-width: 580px; }
+  .hero__spec div { padding: 10px 14px; border-right: 1px dashed var(--line-strong); }
+  .hero__spec div:last-child { border-right: 0; }
+  .hero__spec dt { font-family: var(--font-mono); font-size: 0.66rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+  .hero__spec dd { margin: 2px 0 0; font-size: 0.9rem; font-weight: 500; }
+
+  /* ---------- domains ---------- */
+  .marquee { overflow: hidden; border-block: 1px solid var(--line); background: linear-gradient(90deg, rgba(124, 58, 237, 0.2), rgba(168, 85, 247, 0.08)); padding: 16px 0; }
+  .marquee__track { display: flex; width: max-content; animation: marquee 38s linear infinite; }
+  .marquee__track span { font-family: var(--font-display); font-weight: 600; font-size: clamp(1.1rem, 2vw, 1.5rem); white-space: nowrap; padding-right: 18px; letter-spacing: -0.01em; }
+  .marquee__track b { color: var(--accent); margin: 0 14px; font-weight: 400; }
+  @keyframes marquee { to { transform: translateX(-50%); } }
+  @media (prefers-reduced-motion: reduce) { .marquee__track { animation: none; } }
+
+  .domains__grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: clamp(40px, 6vw, 72px); }
+  .domains__card { position: relative; padding: 26px 24px 22px; border-radius: var(--radius); border: 1px solid var(--line); background: linear-gradient(160deg, var(--panel-2), var(--bg-2)); overflow: hidden; }
+  .domains__card::after { content: ''; position: absolute; top: 0; left: 24px; width: 48px; height: 3px; background: var(--accent); box-shadow: 0 0 18px var(--accent); }
+  .domains__code { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.16em; color: var(--accent-2); }
+  .domains__card h3 { margin: 10px 0 10px; font-size: 1.5rem; }
+  .domains__card p { color: var(--text-2); font-size: 0.97rem; margin: 0; }
+
+  /* ---------- section heads ---------- */
+  .section-head { max-width: 760px; margin-bottom: clamp(32px, 5vw, 56px); }
+  .section-head h2 { margin-top: 14px; font-size: clamp(2.4rem, 5.5vw, 4rem); }
+  .section-head__lede { color: var(--text-2); font-size: 1.08rem; }
+
+  .projects { padding-top: clamp(90px, 12vw, 150px); }
+  .projects__list { display: grid; gap: clamp(22px, 3vw, 34px); }
+
+  /* ---------- about ---------- */
+  .about { padding-top: clamp(90px, 12vw, 150px); }
+  .about .section-head h2 { font-size: clamp(2rem, 4.4vw, 3.2rem); }
+  .about__grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: clamp(28px, 5vw, 64px); align-items: start; }
+  .about__text :global(p) { color: var(--text-2); font-size: 1.06rem; }
+  .about__stats { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 0; }
+  .about__stats div { display: flex; flex-direction: column-reverse; justify-content: flex-end; padding: 18px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); }
+  .about__stats dd { margin: 0 0 6px; font-family: var(--font-display); font-weight: 700; font-size: 1.5rem; color: #fff; }
+  .about__stats dt { font-size: 0.84rem; color: var(--muted); line-height: 1.4; }
+
+  .bom { margin-top: clamp(40px, 6vw, 64px); border: 1px solid var(--line-strong); border-radius: var(--radius); overflow: hidden; background: rgba(18, 14, 28, 0.6); }
+  .bom__row { display: grid; grid-template-columns: 70px 160px 1fr; gap: 16px; align-items: start; padding: 18px 22px; border-top: 1px dashed var(--line); }
+  .bom__row--head { border-top: 0; font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); background: rgba(168, 85, 247, 0.08); padding-block: 12px; }
+  .bom__ref { font-family: var(--font-mono); color: var(--accent-2); font-size: 0.85rem; padding-top: 4px; }
+  .bom__cat { font-family: var(--font-display); font-weight: 600; font-size: 1.1rem; }
+  .bom__list { margin: 0; padding-left: 18px; color: var(--text-2); }
+
+  @media (max-width: 960px) {
+    .hero__grid { grid-template-columns: 1fr; }
+    .about__grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 760px) {
+    .domains__grid { grid-template-columns: 1fr; }
+    .bom__row { grid-template-columns: 44px 1fr; }
+    .bom__row > :last-child { grid-column: 1 / -1; }
+    .bom__row--head { display: none; }
+  }
+  @media (max-width: 560px) {
+    .hero__spec { grid-template-columns: 1fr 1fr; }
+    .hero__spec div:nth-child(2) { border-right: 0; }
+    .hero__spec div:nth-child(-n + 2) { border-bottom: 1px dashed var(--line-strong); }
+    .hero__ctas .btn { flex: 1; justify-content: center; }
+  }
+</style>
+
+<script>
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+  // Type out the name, then cycle through the roles.
+  async function run() {
+    const nameEl = document.querySelector<HTMLElement>('[data-typename]');
+    const roleEl = document.querySelector<HTMLElement>('[data-roles]');
+    if (!nameEl || !roleEl) return;
+    const roles: string[] = JSON.parse(roleEl.dataset.roles || '[]');
+    if (reduce) return;
+
+    const name = nameEl.textContent || '';
+    nameEl.textContent = '';
+    roleEl.textContent = '';
+    await sleep(350);
+    for (const ch of name) {
+      nameEl.textContent += ch;
+      await sleep(ch === ' ' ? 140 : 85 + Math.random() * 60);
+    }
+
+    let i = 0;
+    while (true) {
+      const word = roles[i % roles.length];
+      for (const ch of word) {
+        roleEl.textContent += ch;
+        await sleep(45 + Math.random() * 35);
+      }
+      await sleep(1900);
+      while (roleEl.textContent && roleEl.textContent.length > 0) {
+        roleEl.textContent = roleEl.textContent.slice(0, -1);
+        await sleep(24);
+      }
+      await sleep(260);
+      i++;
+    }
+  }
+  run();
+
+  // Purple spotlight that follows the cursor on project tabs.
+  document.querySelectorAll<HTMLElement>('[data-spotlight]').forEach((el) => {
+    el.addEventListener('pointermove', (e) => {
+      const r = el.getBoundingClientRect();
+      el.style.setProperty('--mx', `${e.clientX - r.left}px`);
+      el.style.setProperty('--my', `${e.clientY - r.top}px`);
+    });
+  });
+</script>

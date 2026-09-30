@@ -1,0 +1,43 @@
+---
+import { Image } from 'astro:assets';
+import { projectImage } from './images';
+
+interface Props {
+  src: string;            // "<project>/<file>", e.g. "swomni/pod-cad.png"
+  alt: string;
+  caption?: string;
+  variant?: 'plate' | 'photo' | 'dark' | 'glow' | 'plain';
+  ratio?: string;         // e.g. "4/3"; leave empty to use the image's own shape
+  zoom?: boolean;         // click to open full size (default true)
+  maxHeight?: string;     // e.g. "520px" for tall images
+}
+const { src, alt, caption, variant = 'photo', ratio, zoom = true, maxHeight } = Astro.props;
+const img = projectImage(src);
+const style = [ratio ? `aspect-ratio:${ratio}` : '', maxHeight ? `--mh:${maxHeight}` : ''].filter(Boolean).join(';');
+---
+<figure class:list={['fig reveal', { 'fig--mh': !!maxHeight }]}>
+  <div class:list={['fig__frame frame', `frame--${variant}`, { 'fig__frame--ratio': !!ratio }]} style={style || undefined}>
+    {zoom ? (
+      <a href={img.src} data-lightbox data-caption={caption ?? alt} aria-label={`Open full size: ${alt}`}>
+        <Image src={img} alt={alt} widths={[480, 800, 1200, 1800]} sizes="(max-width: 900px) 100vw, 860px" />
+      </a>
+    ) : (
+      <Image src={img} alt={alt} widths={[480, 800, 1200, 1800]} sizes="(max-width: 900px) 100vw, 860px" />
+    )}
+  </div>
+  {caption && <figcaption>{caption}</figcaption>}
+</figure>
+
+<style>
+  .fig { margin: 28px 0; }
+  .fig__frame { border-radius: var(--radius); }
+  .fig__frame a { display: block; height: 100%; cursor: zoom-in; }
+  .fig__frame :global(img) { width: 100%; height: auto; }
+  .fig__frame--ratio :global(img) { height: 100%; }
+  .frame--photo :global(img) { object-fit: cover; }
+  .frame--plain { background: transparent; border: 0; }
+  .fig--mh .fig__frame :global(img) { max-height: var(--mh); object-fit: contain; }
+  .fig--mh .frame--photo :global(img) { width: auto; margin: 0 auto; }
+  figcaption { margin-top: 10px; font-size: 0.86rem; color: var(--muted); font-family: var(--font-mono); letter-spacing: 0.01em; }
+  figcaption::before { content: '▸ '; color: var(--accent); }
+</style>

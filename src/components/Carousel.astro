@@ -1,0 +1,216 @@
+---
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+
+interface Slide {
+  href: string;
+  num: string;
+  title: string;
+  subtitle: string;
+  image: ImageMetadata;
+  alt: string;
+  style: 'plate' | 'photo' | 'dark' | 'glow';
+}
+interface Props { slides: Slide[]; interval?: number }
+const { slides, interval = 5200 } = Astro.props;
+---
+<div class="carousel" data-carousel data-interval={interval} aria-roledescription="carousel" aria-label="Featured projects">
+  <div class="carousel__stage brackets">
+    {slides.map((s, i) => (
+      <a
+        class:list={['carousel__slide', `frame--${s.style}`, { 'is-active': i === 0 }]}
+        href={s.href}
+        aria-roledescription="slide"
+        aria-label={`${i + 1} of ${slides.length}: ${s.title}`}
+        aria-hidden={i === 0 ? 'false' : 'true'}
+        tabindex={i === 0 ? 0 : -1}
+        data-slide
+      >
+        <Image
+          src={s.image}
+          alt={s.alt}
+          widths={[640, 960, 1400]}
+          sizes="(max-width: 900px) 100vw, 640px"
+          loading={i === 0 ? 'eager' : 'lazy'}
+          fetchpriority={i === 0 ? 'high' : 'auto'}
+        />
+        <span class="carousel__caption">
+          <span class="carousel__num">{s.num}</span>
+          <span class="carousel__title">{s.title}</span>
+          <span class="carousel__sub">{s.subtitle}</span>
+        </span>
+      </a>
+    ))}
+  </div>
+
+  <div class="carousel__controls">
+    <div class="carousel__dots" role="group" aria-label="Choose slide">
+      {slides.map((s, i) => (
+        <button type="button" class:list={['carousel__dot', { 'is-active': i === 0 }]} aria-label={`Show ${s.title}`} aria-current={i === 0 ? 'true' : undefined} data-dot={i}>
+          <span class="carousel__dot-fill"></span>
+          <span class="carousel__dot-label">{s.num}</span>
+        </button>
+      ))}
+    </div>
+    <div class="carousel__arrows">
+      <button type="button" class="carousel__arrow" aria-label="Previous project" data-prev>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+      </button>
+      <button type="button" class="carousel__arrow" aria-label="Next project" data-next>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<style>
+  .carousel { --dur: 5200ms; width: 100%; }
+  .carousel__stage {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1px solid var(--line-strong);
+    background: var(--panel);
+    box-shadow: 0 40px 120px -40px rgba(124, 58, 237, 0.55);
+  }
+  .carousel__slide {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.9s var(--ease), visibility 0s linear 0.9s;
+    text-decoration: none;
+    color: inherit;
+  }
+  .carousel__slide.is-active { opacity: 1; visibility: visible; transition: opacity 0.9s var(--ease), visibility 0s; z-index: 1; }
+  .carousel__slide :global(img) { width: 100%; height: 100%; object-fit: cover; transform: scale(1.06); transition: transform 7s linear; }
+  .carousel__slide.is-active :global(img) { transform: scale(1); }
+  .frame--plate :global(img), .frame--glow :global(img), .frame--dark :global(img) { object-fit: contain; }
+  .frame--plate :global(img) { padding: 8% 8% 22%; }
+  .frame--glow :global(img) { padding: 6% 6% 20%; }
+  .frame--dark :global(img) { padding: 4% 4% 22%; }
+
+  .carousel__caption {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 56px 22px 20px;
+    display: grid;
+    gap: 2px;
+    background: linear-gradient(to top, rgba(7, 6, 11, 0.95) 20%, rgba(7, 6, 11, 0));
+  }
+  .carousel__num { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.14em; color: var(--accent-2); }
+  .carousel__title { font-family: var(--font-display); font-weight: 700; font-size: clamp(1.25rem, 2.4vw, 1.6rem); color: #fff; }
+  .carousel__sub { color: var(--text-2); font-size: 0.92rem; }
+
+  .carousel__controls { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 16px; }
+  .carousel__dots { display: flex; gap: 8px; flex: 1; }
+  .carousel__dot {
+    position: relative;
+    flex: 1;
+    min-height: 44px;
+    background: none;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+    text-align: left;
+    color: var(--muted);
+  }
+  .carousel__dot::before { content: ''; position: absolute; left: 0; right: 0; top: 8px; height: 3px; border-radius: 3px; background: var(--line-strong); }
+  .carousel__dot-fill { position: absolute; left: 0; top: 8px; height: 3px; width: 0; border-radius: 3px; background: var(--accent); box-shadow: 0 0 10px var(--accent-glow); }
+  .carousel__dot.is-active .carousel__dot-fill { animation: fill var(--dur) linear forwards; }
+  .carousel.is-paused .carousel__dot.is-active .carousel__dot-fill { animation-play-state: paused; }
+  .carousel.is-static .carousel__dot.is-active .carousel__dot-fill { animation: none; width: 100%; }
+  .carousel__dot-label { position: absolute; top: 18px; left: 0; font-family: var(--font-mono); font-size: 0.68rem; letter-spacing: 0.1em; }
+  .carousel__dot.is-active .carousel__dot-label { color: var(--text); }
+  @keyframes fill { to { width: 100%; } }
+
+  .carousel__arrows { display: flex; gap: 8px; }
+  .carousel__arrow {
+    width: 46px;
+    height: 46px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    border: 1px solid var(--line-strong);
+    background: rgba(255, 255, 255, 0.02);
+    color: var(--text);
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+  }
+  .carousel__arrow:hover { background: rgba(168, 85, 247, 0.15); border-color: var(--accent-2); }
+  .carousel__arrow svg { width: 18px; height: 18px; }
+  @media (prefers-reduced-motion: reduce) {
+    .carousel__slide :global(img) { transform: none !important; transition: none; }
+  }
+</style>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-carousel]').forEach((root) => {
+    const slides = [...root.querySelectorAll<HTMLAnchorElement>('[data-slide]')];
+    const dots = [...root.querySelectorAll<HTMLButtonElement>('[data-dot]')];
+    const interval = Number(root.dataset.interval) || 5200;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    root.style.setProperty('--dur', `${interval}ms`);
+    let index = 0;
+    let timer: number | undefined;
+    let paused = false;
+
+    const show = (i: number) => {
+      index = (i + slides.length) % slides.length;
+      slides.forEach((s, j) => {
+        const on = j === index;
+        s.classList.toggle('is-active', on);
+        s.setAttribute('aria-hidden', String(!on));
+        s.tabIndex = on ? 0 : -1;
+      });
+      dots.forEach((d, j) => {
+        d.classList.remove('is-active');
+        d.removeAttribute('aria-current');
+        if (j === index) {
+          void d.offsetWidth; // restart the progress-bar animation
+          d.classList.add('is-active');
+          d.setAttribute('aria-current', 'true');
+        }
+      });
+      schedule();
+    };
+    const schedule = () => {
+      window.clearTimeout(timer);
+      if (reduce || paused) return;
+      timer = window.setTimeout(() => show(index + 1), interval);
+    };
+    const pause = (p: boolean) => {
+      paused = p;
+      root.classList.toggle('is-paused', p);
+      if (p) window.clearTimeout(timer);
+      else show(index); // restart this slide's timer cleanly
+    };
+
+    if (reduce) root.classList.add('is-static');
+    root.querySelector('[data-prev]')?.addEventListener('click', () => show(index - 1));
+    root.querySelector('[data-next]')?.addEventListener('click', () => show(index + 1));
+    dots.forEach((d, j) => d.addEventListener('click', () => show(j)));
+    root.addEventListener('mouseenter', () => pause(true));
+    root.addEventListener('mouseleave', () => pause(false));
+    root.addEventListener('focusin', () => pause(true));
+    root.addEventListener('focusout', (e) => {
+      if (!root.contains((e as FocusEvent).relatedTarget as Node)) pause(false);
+    });
+    document.addEventListener('visibilitychange', () => (document.hidden ? window.clearTimeout(timer) : schedule()));
+
+    // swipe on touch screens
+    let x0: number | null = null;
+    root.addEventListener('touchstart', (e) => (x0 = e.touches[0].clientX), { passive: true });
+    root.addEventListener('touchend', (e) => {
+      if (x0 === null) return;
+      const dx = e.changedTouches[0].clientX - x0;
+      if (Math.abs(dx) > 40) show(index + (dx < 0 ? 1 : -1));
+      x0 = null;
+    });
+
+    schedule();
+  });
+</script>

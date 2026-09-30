@@ -1,0 +1,23 @@
+---
+// Row of big numbers. items: [{ value: "1.63×", label: "Top speed vs. motor limit" }]
+interface Props { items: { value: string; label: string }[]; cols?: number }
+const { items, cols } = Astro.props;
+---
+<dl class:list={["stats reveal", { "stats--fixed": !!cols }]} style={cols ? `--cols:${cols}` : undefined}>
+  {items.map((s) => (
+    <div class="stats__item">
+      <dt>{s.label}</dt>
+      <dd>{s.value}</dd>
+    </div>
+  ))}
+</dl>
+
+<style>
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin: 28px 0; }
+  .stats--fixed { grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); }
+  @media (max-width: 640px) { .stats--fixed { grid-template-columns: 1fr 1fr; } }
+  .stats__item { display: flex; flex-direction: column-reverse; justify-content: flex-end; padding: 18px 18px 16px; border-radius: 14px; border: 1px solid var(--line); background: linear-gradient(160deg, var(--panel-2), var(--bg-2)); position: relative; overflow: hidden; }
+  .stats__item::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--accent); box-shadow: 0 0 14px var(--accent); }
+  dd { margin: 0 0 4px; font-family: var(--font-display); font-weight: 700; font-size: clamp(1.5rem, 3vw, 2rem); color: #fff; letter-spacing: -0.02em; }
+  dt { color: var(--muted); font-size: 0.84rem; line-height: 1.4; }
+</style>

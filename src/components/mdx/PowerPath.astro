@@ -1,0 +1,34 @@
+---
+// Shows how power flows through a mechanism, step by step.
+// paths: [{ name: "Drive (wheel spin)", steps: ["Motor", "HTD5 belt", ...] }]
+interface Props { paths: { name: string; note?: string; steps: string[] }[]; title?: string }
+const { paths, title } = Astro.props;
+---
+<div class="pp reveal">
+  {title && <p class="pp__title">{title}</p>}
+  {paths.map((p, i) => (
+    <div class="pp__path">
+      <div class="pp__name">
+        <span class="pp__idx">P{i + 1}</span>
+        <span>{p.name}</span>
+      </div>
+      <ol class="pp__steps">
+        {p.steps.map((s) => <li>{s}</li>)}
+      </ol>
+      {p.note && <p class="pp__note">{p.note}</p>}
+    </div>
+  ))}
+</div>
+
+<style>
+  .pp { margin: 28px 0; padding: 22px; border-radius: var(--radius); border: 1px solid var(--line-strong); background: rgba(18, 14, 28, 0.7); display: grid; gap: 22px; }
+  .pp__title { font-family: var(--font-mono); font-size: 0.74rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin: 0; }
+  .pp__name { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-weight: 600; font-size: 1.08rem; margin-bottom: 12px; }
+  .pp__idx { font-family: var(--font-mono); font-size: 0.72rem; color: #fff; background: var(--accent-3); padding: 3px 8px; border-radius: 6px; }
+  .pp__steps { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 0; }
+  .pp__steps li { position: relative; font-family: var(--font-mono); font-size: 0.8rem; color: var(--text); padding: 8px 12px; border: 1px solid var(--line-strong); border-radius: 8px; background: rgba(168, 85, 247, 0.08); }
+  .pp__steps li:not(:first-child) { margin-left: 34px; }
+  .pp__steps li:not(:first-child)::before { content: ''; position: absolute; left: -26px; top: 50%; width: 16px; height: 2px; background: var(--accent); }
+  .pp__steps li:not(:first-child)::after { content: ''; position: absolute; left: -12px; top: calc(50% - 4px); border: 5px solid transparent; border-left-color: var(--accent); border-right: 0; }
+  .pp__note { margin: 12px 0 0; font-size: 0.9rem; color: var(--text-2); }
+</style>

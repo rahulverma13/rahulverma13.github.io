@@ -1,0 +1,217 @@
+---
+title: Swomni
+subtitle: Coaxial swerve-omni drive with a CVT effect
+order: 1
+status: published
+summary: A four-pod drivetrain whose omni wheels can rotate to any angle. Turning the wheels inward trades traction for speed like a continuously variable transmission, and pushed the robot 1.63× past its motor's top speed.
+roleBadge: Solo project
+roleDetail: Independent research project that I did entirely on my own, across the full engineering stack. I worked out the kinematics, designed the CAD, fabricated and assembled the robot, wired the electronics, wrote the control software, and ran and analyzed every test.
+domains: [Mechanical, Electrical, Software]
+tags: [Kinematics, Nonlinear control, Coaxial swerve, CAD, 3D printing, Laser-cut aluminum, Java, Data analysis]
+award: "1st Place, Engineering: Robotics · Greater San Diego Science and Engineering Fair"
+highlights:
+  - { value: "1.63×", label: "top speed vs. motor limit" }
+  - { value: "~45%", label: "optimal CVT switch point" }
+  - { value: "1st Place", label: "GSDSEF Robotics" }
+facts:
+  role: "Sole engineer: math, CAD, fabrication, electronics, software, testing"
+  timeline: "2024 – 2025 (Grade 11)"
+  team: "Solo"
+  tools: "CAD, FDM 3D printing, laser-cut 6061 aluminum, REV Expansion Hub, Java"
+hero: ./images/hero-render.png
+heroAlt: CAD render of the Swomni drivetrain with purple 3D-printed swerve pods, omni wheels and belt drives on an aluminum chassis plate
+heroStyle: plate
+cover: ./images/robot-cutout.png
+coverAlt: The finished Swomni robot with pink 3D-printed pods, belts and wiring on an aluminum chassis
+coverStyle: glow
+links:
+  - { label: Research poster (PDF), href: /files/swomni-research-poster.pdf, kind: PDF }
+  - { label: Demo video on YouTube, href: "https://youtube.com/shorts/MwDviS-xaNA", kind: Video }
+---
+
+## Overview
+
+<Grid cols={2} align="start">
+<div>
+
+**Swomni** (swerve + omni) is a drivetrain built from four independent pods. Each pod holds an **omni wheel**, a wheel with free-spinning rollers around its rim, and each pod can rotate about its vertical (yaw) axis to point in any direction.
+
+That combination unlocks something a normal drivetrain can't do. When the robot is already moving forward and the wheels turn *inward*, the rollers start spinning to absorb the sideways motion, and the robot's forward speed climbs **past the motor's own top speed**. It behaves like a **continuously variable transmission (CVT)** built out of pure kinematics: no extra gears, just wheel angle.
+
+My project had two goals: **prove the effect on real hardware**, and then find the **control strategy** that uses it best over short distances.
+
+</div>
+<Video id="MwDviS-xaNA" title="Swomni drivetrain demo" vertical featured caption="Demo: the drivetrain driving and angling its pods" />
+</Grid>
+
+<Stats items={[
+  { value: "1.63×", label: "Top speed vs. nominal motor speed (4.99 → 7.90 ft/s)" },
+  { value: "12.5%", label: "Faster 18 ft run with the best control strategy" },
+  { value: "40–60%", label: "Optimal speed to start angling the wheels" },
+  { value: "110", label: "Timed trials across 2 distances (5 per setting)" }
+]} />
+
+<Figure src="swomni/robot-photo.jpg" alt="Finished Swomni robot on a wooden floor, with pink 3D-printed pods, belts and wiring" caption="The finished robot: four coaxial pods on a laser-cut aluminum plate" />
+
+## The math
+
+### Why tilting the wheels adds speed
+
+Look at one wheel from above. The motor spins it at angular speed ω, so the rim moves at a fixed surface speed **ωr** along the direction the wheel points. The rollers on an omni wheel spin freely, so the wheel puts up no resistance to sliding *sideways*.
+
+Now let the wheel sit at an angle θ from the direction the robot is travelling. The robot's velocity V splits into two parts: a part along the wheel's heading, which the motor must supply, and a sideways part that the rollers simply absorb.
+
+<Tex block label="Velocity" expr="V\cos\theta = \omega r \quad\Longrightarrow\quad V = \frac{\omega r}{\cos\theta}" />
+
+With θ = 0 the robot moves at the motor's normal speed ωr. As θ grows, cos θ shrinks and the achievable speed climbs; in theory it goes to infinity as θ approaches 90°. The four pods angle inward in mirror-image pairs, so their sideways components cancel and the robot still drives straight.
+
+<CvtExplorer />
+
+### The catch: traction
+
+Speed isn't free. Each wheel pushes with force F along its own heading, and only the forward component of that push accelerates the robot:
+
+<Tex block label="Force" expr="F_{\text{net}} = 4F\cos\theta" />
+
+Multiply force by speed and the angle cancels out, so the power delivered stays the same:
+
+<Tex block label="Power" expr="P = F_{\text{net}}\,V = 4F\cos\theta\cdot\frac{\omega r}{\cos\theta} = 4F\,\omega r" />
+
+Force and speed trade off against each other at constant power. That's the definition of a transmission, and since θ can take any value it's a *continuously variable* one: the effective gear ratio is simply **1 / cos θ**.
+
+<Figure src="swomni/cvt-figure.png" variant="plate" alt="Bottom views of the robot: wheels pointed straight give net force 4F and max velocity V; wheels angled give net force 4F cos theta and max velocity V over cos theta" caption="Wheels straight (left) vs. angled inward (right): force drops by cos θ, top speed rises by 1/cos θ" />
+
+The engineering question is therefore **when** to shift. Angle the wheels too early and the robot can't accelerate; too late and the run is almost over. Physical limits like roller friction and gear backlash cap the real speed-up well before the math does.
+
+## Mechanical design
+
+### A coaxial swerve pod
+
+Each pod has to do two independent jobs at once: **spin the wheel** and **rotate the whole pod**, with nothing tangling as the pod turns endlessly. I solved this with a **coaxial** design, where both power paths share the pod's vertical axis.
+
+<Grid cols={2} align="center">
+<Figure src="swomni/pod-cad.png" variant="plate" ratio="4/5" alt="CAD render of one Swomni pod: aluminum top ring, belt pulley and spur gear above, pink 3D-printed fork holding an omni wheel and bevel gear" caption="One pod in CAD. Belt pulleys stack on the same axis the pod rotates about" />
+<div>
+
+<PowerPath paths={[
+  { name: "Drive (spins the wheel)", steps: ["DC motor", "Belt", "Coaxial shaft", "Spur gear", "Bevel gear", "Omni wheel"] },
+  { name: "Steer (rotates the pod)", steps: ["DS3225 servo", "Belt", "Pod ring on bearing"] }
+]} />
+
+Because the drive belt runs down the **center of the steering axis**, the motor and servo stay bolted to the chassis while the pod rotates freely underneath them. The bevel gear then turns the vertical drive shaft 90° to spin the wheel axle.
+
+</div>
+</Grid>
+
+<Figure src="swomni/chassis-cad.png" variant="plate" alt="CAD of the full drivetrain with a transparent chassis plate, showing four pods, belts, servos and yellow motors mounted above each pod" caption="Full assembly: each motor and servo sits directly over its pod, with belts stacked coaxially" />
+
+### Parts and materials
+
+<Grid cols={3} align="center">
+<Figure src="swomni/center-plate.png" variant="plate" ratio="1/1" alt="Flat laser-cut aluminum center plate with four large pod cutouts and servo slots" caption="¼″ 6061 aluminum center plate, laser cut" />
+<Figure src="swomni/printed-parts.png" variant="plate" ratio="1/1" alt="Pink 3D-printed pod parts: bearing ring, pulley and wheel fork" caption="3D-printed PLA parts in each pod" />
+<Figure src="swomni/pod-photo.jpg" ratio="1/1" alt="Close-up photo of a printed pod mounted to the aluminum plate, showing the gears" caption="A printed pod mounted on the plate" />
+</Grid>
+
+- **Structure:** ¼″ 6061 aluminum center plate and ⅛″ bearing plates, both laser cut; custom pod parts FDM-printed in PLA
+- **Power transmission:** GT2 and HTD5 timing belts, module 0.8 pinions, bevel gears, aluminum shafting, bearings
+- **Wheels:** four omni wheels, one per pod
+- **Hardware:** M3/M4 socket and button screws, nylock nuts and set screws
+
+## Electronics & control
+
+<Grid cols={2}>
+<div>
+
+### Hardware
+
+- **REV Robotics Expansion Hub** driving four 12 V DC motors and four **35 kg·cm DS3225 servos**
+- **Android phone** as the central controller
+- **Motor encoder and accelerometer** to measure speed and acceleration in real time
+
+</div>
+<div>
+
+### Software
+
+- **Kinematics** that convert a desired "gear ratio" into matching pod angles for all four wheels
+- A **velocity-based control strategy**: accelerate with wheels straight, then start angling the wheels once measured speed reaches a set percentage of the no-CVT top speed
+- **Test programs** to verify the mechanical behavior and log velocity and acceleration for every run
+
+</div>
+</Grid>
+
+<Callout title="The control idea">
+
+The robot first accelerates normally, with full traction. Once its measured speed reaches a threshold (say 50% of the no-CVT top speed), the software gradually rotates the pods inward, shifting into a "taller gear" while there's still enough traction to keep accelerating. Choosing that threshold well is the whole optimization problem.
+
+</Callout>
+
+## Build process
+
+I designed the robot in CAD, iterated on single pods by 3D printing and testing them one at a time, and then built up the full drivetrain.
+
+<Figure src="swomni/build-progress.jpg" variant="dark" alt="Six build photos: 3D printing parts, assembling the first module, three modules assembled, four modules assembled, fully wired and complete, and performing experiments" caption="From printer to test track: printing, first pod, three pods, four pods, fully wired, and running experiments" />
+
+<Grid cols={2}>
+<Figure src="swomni/pod-assembly.jpg" ratio="4/5" alt="Hand holding the aluminum plate with pods mounted, showing omni wheels and motors from below" caption="Pods mounted, seen from below" />
+<Figure src="swomni/test-track.jpg" ratio="4/5" alt="The robot on a foam-tile test track between two tape lines" caption="The timed test track" />
+</Grid>
+
+## Testing & results
+
+### Experiment
+
+In each trial the robot accelerated until it reached a set percentage of its no-CVT top speed, and then the software began angling the wheels. I swept that switch point from **0% to 100% in 10% steps**, ran **5 trials at each setting**, and timed runs over **12 ft and 18 ft**.
+
+<LineChart
+  title="12 ft run: average travel time"
+  xLabel="Speed at which the CVT starts"
+  yLabel="Time (s)"
+  xFormat="percent"
+  yUnit=" s"
+  best
+  band={{ from: 0.4, to: 0.6, label: "SWEET SPOT" }}
+  points={[
+    { x: 0, y: 2.64 }, { x: 0.1, y: 2.58 }, { x: 0.2, y: 2.52 }, { x: 0.3, y: 2.48 }, { x: 0.4, y: 2.40 },
+    { x: 0.5, y: 2.45 }, { x: 0.6, y: 2.47 }, { x: 0.7, y: 2.50 }, { x: 0.8, y: 2.60 }, { x: 0.9, y: 2.70 }, { x: 1, y: 2.654 }
+  ]}
+/>
+<LineChart
+  title="18 ft run: average travel time"
+  xLabel="Speed at which the CVT starts"
+  yLabel="Time (s)"
+  xFormat="percent"
+  yUnit=" s"
+  best
+  band={{ from: 0.4, to: 0.6, label: "SWEET SPOT" }}
+  note="At 0–10% the wheels angled too early and the robot could not accelerate enough to finish (DNF)."
+  points={[
+    { x: 0, y: null }, { x: 0.1, y: null }, { x: 0.2, y: 4.99 }, { x: 0.3, y: 4.22 }, { x: 0.4, y: 3.80 },
+    { x: 0.5, y: 3.64 }, { x: 0.6, y: 3.76 }, { x: 0.7, y: 4.01 }, { x: 0.8, y: 4.23 }, { x: 0.9, y: 4.20 }, { x: 1, y: 4.16 }
+  ]}
+/>
+
+### What the data shows
+
+- **The CVT effect is real.** As the wheels angled inward, the robot's top speed rose from **4.99 ft/s to 7.90 ft/s**, a **63% increase** over the motor's normal limit.
+- **There's a sweet spot.** Starting the shift between **40% and 60%** of top speed gave the best times at both distances. The 12 ft run dropped from 2.65 s to 2.40 s (**9.4% faster**) and the 18 ft run from 4.16 s to 3.64 s (**12.5% faster**). The best overall threshold was about **45%**.
+- **Two phases of motion.** The acceleration profiles show a fast first phase where the robot reaches its normal top speed, then a slower second phase where the CVT keeps adding speed. The shift works best right as the first phase ends, which is exactly why 40–60% wins.
+- **Top speed peaks around 81° of wheel angle** before roller friction takes over and speed falls off.
+
+<Figure src="swomni/fig-velocity-angle.png" variant="plate" alt="Graph of maximum velocity reached versus final wheel angle, rising from about 4.7 ft/s at 0 degrees to about 7.5 ft/s near 81 degrees, then dropping sharply" caption="Max velocity vs. final wheel angle" />
+<Figure src="swomni/fig-accel-profile.png" variant="plate" alt="Velocity and acceleration profile: period 1 rapid acceleration to about 5 ft/s with no CVT, then period 2 slow increase to about 6 ft/s as the CVT engages; theoretical max speed rises above 10" caption="Acceleration profile showing the two phases of motion" />
+
+### Next steps
+
+Future work would test **nonlinear shift schedules** (angling the wheels along a curve instead of a fixed threshold), plus multi-directional motion and outside factors like floor surface. The same idea could apply anywhere fast, efficient motion matters: competitive robotics, autonomous vehicles and industrial automation.
+
+## Research poster
+
+<Poster
+  src="swomni/poster.jpg"
+  pdf="/files/swomni-research-poster.pdf"
+  title="Optimization of Kinematics and Control of a Coaxial Swerve Omni Based Drive"
+  note="1st Place, Engineering: Robotics · Greater San Diego Science and Engineering Fair"
+  alt="Research poster with background, hypothesis, materials, design execution, final design, analysis, results graphs and conclusion"
+/>

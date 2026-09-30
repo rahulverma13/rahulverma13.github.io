@@ -1,0 +1,115 @@
+---
+title: Suspension Swerve
+subtitle: Coaxial swerve drive with independent suspension on every wheel
+order: 4
+status: published
+summary: A swerve drivetrain where every wheel can steer in any direction and also ride up and down on its own suspension. A sliding bevel gear, MGN linear rails and a coaxial gearbox deliver steering, drive power and 2.5″ of travel through the same compact module.
+roleBadge: Team project · Sole CAD designer
+roleDetail: Built with my FIRST Tech Challenge team, Runtime Terror 22105. I did all of the drivetrain's CAD and led the build. I also worked on the theoretical kinematics for controlling the chassis, though controls weren't my main focus on this one.
+domains: [Mechanical, Electrical, Software]
+tags: [Swerve drive, Suspension, Coaxial gearbox, Planetary gearing, MGN rails, Onshape, Absolute encoders, Swerve kinematics]
+highlights:
+  - { value: "2.5″", label: "vertical wheel travel" }
+  - { value: "4 × MGN7", label: "linear rails per module" }
+  - { value: "∞", label: "continuous wheel rotation" }
+facts:
+  role: "Sole CAD designer, build lead, kinematics support"
+  team: "FTC Team 22105 Runtime Terror"
+  tools: "Onshape, 3D printing, aluminum plate, MT6701 encoders, Java"
+hero: ./images/hero-night.jpg
+heroAlt: Side view of the finished suspension swerve robot at night with a clear polycarbonate shell and green and blue underglow
+heroStyle: photo
+cover: ./images/cad-iso.png
+coverAlt: CAD render of the suspension swerve drivetrain with a transparent shell, four swerve modules and the team number 22105
+coverStyle: plate
+links:
+  - { label: Demo video on YouTube, href: "https://www.youtube.com/watch?v=VUyIV2vnNWE&t=13s", kind: Video }
+---
+
+## Overview
+
+A **swerve drive** lets every wheel steer independently, so a robot can drive in any direction while facing any way. In FTC, swerve is already one of the hardest drivetrains to build. We added a twist: **each wheel module can also move up and down** on its own suspension, so the robot can drive over rough terrain and obstacles without losing traction.
+
+Every module has one motor to spin the wheel and one servo to steer it. The challenge is fitting a coaxial gearbox, a steering bearing, and a suspension that still passes drive power into **the same small footprint**, and then making four of them run smoothly together.
+
+<Video id="VUyIV2vnNWE" start={13} end={48} title="Suspension swerve drivetrain demo" featured caption="Drivetrain demo" />
+
+<Stats items={[
+  { value: "2.5″", label: "Vertical suspension travel per wheel" },
+  { value: "3 + 4", label: "Compression springs and MGN7 rails per module" },
+  { value: "∞", label: "Continuous steering rotation, no cable wrap" },
+  { value: "2nd-order", label: "Swerve kinematics to reduce drivetrain skew" }
+]} />
+
+<Figure src="suspension-swerve/cad-iso.png" variant="plate" alt="Isometric CAD render of the full drivetrain with a transparent shell showing four modules, belts, control hubs and battery" caption="Full drivetrain in Onshape" />
+
+<Grid cols={2}>
+<Figure src="suspension-swerve/cad-top.png" variant="plate" ratio="1/1" alt="Top-down CAD view showing the four module gear rings, belts, two REV control hubs and battery" caption="Top view" />
+<Figure src="suspension-swerve/cad-bottom.png" variant="plate" ratio="1/1" alt="Bottom-up CAD view showing the four wheels angled in different directions and the chassis rails" caption="Bottom view: each wheel steers independently" />
+</Grid>
+
+## Power transmission
+
+The heart of this design is how power reaches the wheel. Both the motor and the servo are **mounted to the chassis and never move**, yet the module under them can spin endlessly and slide up and down. That's only possible because everything is **coaxial**, sharing the module's vertical axis.
+
+<PowerPath paths={[
+  { name: "Drive (spins the wheel)", steps: ["Motor", "Timing belt", "Central shaft", "Spur gear pair (planetary)", "Sliding bevel gear", "Wheel"], note: "The spur gears double as a planetary gearset, so the drive keeps working however the module is turned." },
+  { name: "Steer (turns the module)", steps: ["Servo", "Timing belt pulley", "Module ring", "Large bearing"], note: "The whole module rotates inside one large bearing, so steering has no end stops." },
+  { name: "Suspend (moves the wheel up and down)", steps: ["Bevel gear slip-fit on shaft", "4 × MGN7 linear rails", "3 compression springs"], note: "The bevel gear slides along its shaft, so drive power still reaches the wheel anywhere in its 2.5″ of travel." }
+]} />
+
+<Grid cols={2}>
+<Figure src="suspension-swerve/motor-geartrain.png" variant="plate" ratio="4/5" alt="CAD close-up of the motor drive path: motor, belt to a vertical shaft, down to the wheel through bevel gears, with other parts shown transparent" caption="Drive path: motor → belt → shaft → gears → wheel" />
+<Figure src="suspension-swerve/servo-geartrain.png" variant="plate" ratio="4/5" alt="CAD close-up of the steering path: servo with an orange gear driving the large module ring gear" caption="Steer path: the fixed servo turns the module ring" />
+</Grid>
+
+## Module design
+
+<Grid cols={2} align="center">
+<Figure src="suspension-swerve/pod-cad.png" variant="plate" ratio="3/4" alt="CAD render of a single module: large ring gear on top, four linear rails with springs around a central shaft, and the wheel below" caption="One module: ring gear, rails, springs and wheel" />
+<div>
+
+### Suspension
+
+- **Four MGN7 linear rails** constrain the wheel so it can only move vertically, with no rocking
+- **Three compression springs** carry the robot's weight and soak up bumps
+- A **sliding bevel gear**, slip-fit on its shaft, keeps the wheel powered through **2.5″ of travel**
+
+### Steering
+
+- The module turns inside **one large bearing**, driven by the servo through a belted pulley and gear
+- Because the motor and servo are fixed to the frame, the wheel can **rotate continuously** with no wires twisting
+
+</div>
+</Grid>
+
+<Figure src="suspension-swerve/module-pair-cad.png" variant="plate" alt="CAD of two modules on one side of the chassis with a transparent top plate, showing yellow motors, belts, gear rings and rails" caption="Two modules and their motors on one side of the chassis" />
+
+## Electronics & software
+
+- **MT6701 analog absolute encoder** on every module to measure the wheel's steering angle directly
+- **Two servo power injectors** to raise the voltage supplied to the steering servos
+- Programmed in **Java**, using **second-order swerve kinematics** to reduce drivetrain skew when the robot drives and turns at the same time
+
+## Build process
+
+We 3D-printed prototypes to test the module design before finalizing the CAD, then assembled the modules with aluminum plates. After the first build came months of tuning: **gear spacing** to cut friction, **control software** to reduce driver lag, and getting all of the components to work together smoothly.
+
+<Grid cols={2}>
+<Figure src="suspension-swerve/printed-prototypes.jpg" ratio="4/3" alt="Shelf of black 3D-printed swerve prototype parts laid out in rows" caption="3D-printed prototypes used to test the design" />
+<Figure src="suspension-swerve/assembly.jpg" ratio="4/3" alt="Two people's hands assembling the aluminum chassis with modules attached" caption="Assembling the chassis" />
+</Grid>
+
+<Grid cols={2}>
+<Figure src="suspension-swerve/module-in-hand.jpg" ratio="3/4" alt="Hand holding one side rail with two assembled modules, springs and wheels visible" caption="Two modules assembled on a side plate" />
+<Figure src="suspension-swerve/chassis-progress.jpg" ratio="3/4" alt="Partially assembled chassis on foam tiles with modules, gears and wiring exposed" caption="Chassis mid-build, before the shell" />
+</Grid>
+
+## Final build
+
+<Grid cols={2}>
+<Figure src="suspension-swerve/final-iso.jpg" ratio="4/3" alt="Finished drivetrain in a clear polycarbonate shell on foam tiles, showing the gear rings on top of each module" caption="Finished drivetrain" />
+<Figure src="suspension-swerve/final-bottom.jpg" ratio="4/3" alt="Underside of the finished drivetrain through the clear base plate, showing four wheels at different angles" caption="Underside: four independently steered wheels" />
+</Grid>
+
+<Figure src="suspension-swerve/hero-night.jpg" alt="Finished robot at night, side view, glowing with green and blue underglow" caption="The finished robot" />

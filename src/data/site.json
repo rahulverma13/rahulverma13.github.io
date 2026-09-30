@@ -1,0 +1,19 @@
+{
+  "name": "Rahul Verma",
+  "shortName": "RV",
+  "title": "Rahul Verma | Engineering Portfolio",
+  "description": "Rahul Verma is an EECS student at UC Berkeley (Mechanical Engineering minor) who designs, builds and programs robots: drivetrains, mechanisms, control algorithms and ML systems.",
+  "eyebrow": "EECS @ UC Berkeley · Mechanical Engineering minor",
+  "typedRoles": [
+    "mechanical systems.",
+    "control algorithms.",
+    "robot drivetrains.",
+    "embedded electronics.",
+    "ML benchmarking tools."
+  ],
+  "pitch": "I design, machine, wire and program robots end to end: from CAD and tight-tolerance mechanisms to the kinematics and control code that make them move.",
+  "email": "connect.rahulv@gmail.com",
+  "linkedin": "https://www.linkedin.com/in/rahul-verma-berkeley",
+  "github": "https://github.com/rahulverma13",
+  "resume": "/resume.pdf"
+}

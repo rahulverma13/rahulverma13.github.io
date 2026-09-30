@@ -1,0 +1,15 @@
+---
+// Lays out figures (or anything) side by side. Collapses to one column on phones.
+interface Props { cols?: 2 | 3 | 4; align?: 'start' | 'center' | 'end' }
+const { cols = 2, align = 'start' } = Astro.props;
+---
+<div class="grid" style={`--cols:${cols};align-items:${align}`}>
+  <slot />
+</div>
+
+<style>
+  .grid { display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); gap: 18px; margin: 28px 0; }
+  .grid > :global(.fig) { margin: 0; }
+  @media (max-width: 720px) { .grid { grid-template-columns: 1fr; } }
+  @media (min-width: 721px) and (max-width: 1000px) { .grid { grid-template-columns: repeat(min(var(--cols), 2), minmax(0, 1fr)); } }
+</style>

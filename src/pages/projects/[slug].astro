@@ -1,0 +1,284 @@
+---
+import Base from '../../layouts/Base.astro';
+import { Image } from 'astro:assets';
+import { getCollection, render } from 'astro:content';
+import type { CollectionEntry } from 'astro:content';
+import Figure from '../../components/mdx/Figure.astro';
+import Grid from '../../components/mdx/Grid.astro';
+import Tex from '../../components/mdx/Tex.astro';
+import Video from '../../components/mdx/Video.astro';
+import Stats from '../../components/mdx/Stats.astro';
+import PowerPath from '../../components/mdx/PowerPath.astro';
+import Callout from '../../components/mdx/Callout.astro';
+import Poster from '../../components/mdx/Poster.astro';
+import CvtExplorer from '../../components/mdx/CvtExplorer.astro';
+import LineChart from '../../components/mdx/LineChart.astro';
+import BarChart from '../../components/mdx/BarChart.astro';
+import GainScheduleDiagram from '../../components/mdx/GainScheduleDiagram.astro';
+
+// Building blocks that every project's index.mdx can use without importing anything.
+const components = { Figure, Grid, Tex, Video, Stats, PowerPath, Callout, Poster, CvtExplorer, LineChart, BarChart, GainScheduleDiagram };
+
+export async function getStaticPaths() {
+  const all = (await getCollection('projects', (p) => p.data.status === 'published')).sort((a, b) => a.data.order - b.data.order);
+  return all.map((project, i) => ({
+    params: { slug: project.id },
+    props: { project, index: i, next: all[(i + 1) % all.length], prev: all[(i - 1 + all.length) % all.length] },
+  }));
+}
+
+interface Props { project: CollectionEntry<'projects'>; index: number; next: CollectionEntry<'projects'>; prev: CollectionEntry<'projects'> }
+const { project, index, next } = Astro.props;
+const d = project.data;
+const { Content, headings } = await render(project);
+const sections = headings.filter((h) => h.depth === 2);
+const num = String(index + 1).padStart(2, '0');
+const facts = [
+  { k: 'Role', v: d.facts.role },
+  { k: 'Timeline', v: d.facts.timeline },
+  { k: 'Team', v: d.facts.team },
+  { k: 'Tools', v: d.facts.tools },
+].filter((f) => f.v);
+---
+<Base title={d.title} description={d.summary} ogImage={d.hero}>
+  <article class="proj">
+    <!-- ============ TITLE BLOCK ============ -->
+    <header class="proj__head">
+      <div class="container">
+        <a class="proj__back" href="/#projects">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 12H5M11 19l-7-7 7-7"/></svg>
+          All projects
+        </a>
+        <div class="proj__headgrid">
+          <div>
+            <p class="eyebrow" data-scramble>PRJ-{num} / {d.subtitle}</p>
+            <h1 class="proj__title"><span data-typetitle>{d.title}</span><span class="caret" aria-hidden="true"></span></h1>
+            {d.award && (
+              <p class="proj__award">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="9" r="6"/><path d="m8.5 13.5-1.5 8 5-3 5 3-1.5-8"/></svg>
+                {d.award}
+              </p>
+            )}
+            <p class="proj__summary">{d.summary}</p>
+            <div class="proj__role">
+              <span class="proj__role-badge">{d.roleBadge}</span>
+              <p>{d.roleDetail}</p>
+            </div>
+          </div>
+          <div class:list={['proj__hero frame brackets', `frame--${d.heroStyle}`]}>
+            <Image src={d.hero} alt={d.heroAlt} widths={[640, 1000, 1500]} sizes="(max-width: 960px) 100vw, 620px" loading="eager" fetchpriority="high" />
+          </div>
+        </div>
+
+        <!-- quick facts -->
+        <dl class="facts">
+          {facts.map((f) => (
+            <div class="facts__cell">
+              <dt>{f.k}</dt>
+              <dd>{f.v}</dd>
+            </div>
+          ))}
+          <div class="facts__cell facts__cell--domains">
+            <dt>Domains</dt>
+            <dd>{d.domains.map((dom) => <span class="domain"><i></i>{dom}</span>)}</dd>
+          </div>
+        </dl>
+        <div class="chip-row proj__tags">{d.tags.map((t) => <span class="chip">{t}</span>)}</div>
+      </div>
+    </header>
+
+    <!-- ============ BODY ============ -->
+    <div class="container proj__layout">
+      <nav class="toc" aria-label="On this page">
+        <p class="toc__title">On this page</p>
+        <ol>
+          {sections.map((h, i) => (
+            <li><a href={`#${h.slug}`} data-toc={h.slug}><span>{String(i + 1).padStart(2, '0')}</span>{h.text}</a></li>
+          ))}
+          {d.links.length > 0 && <li><a href="#downloads" data-toc="downloads"><span>{String(sections.length + 1).padStart(2, '0')}</span>Links &amp; downloads</a></li>}
+        </ol>
+        {d.links.length > 0 && (
+          <div class="toc__links">
+            {d.links.map((l) => <a href={l.href} target="_blank" rel="noopener">{l.label} ↗</a>)}
+          </div>
+        )}
+      </nav>
+
+      <div class="prose">
+        <Content components={components} />
+
+        {d.links.length > 0 && (
+          <section class="downloads" aria-labelledby="downloads">
+            <h2 id="downloads">Links &amp; downloads</h2>
+            <div class="downloads__grid">
+              {d.links.map((l) => (
+                <a class="downloads__item" href={l.href} target="_blank" rel="noopener">
+                  <span class="downloads__kind">{l.kind ?? 'Link'}</span>
+                  <span class="downloads__label">{l.label}</span>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg>
+                </a>
+              ))}
+            </div>
+          </section>
+        )}
+      </div>
+    </div>
+
+    <!-- ============ NEXT PROJECT ============ -->
+    <div class="container">
+      <a class="next" href={`/projects/${next.id}/`}>
+        <div>
+          <p class="eyebrow">Next project</p>
+          <p class="next__title">{next.data.title}</p>
+          <p class="next__sub">{next.data.subtitle}</p>
+        </div>
+        <div class:list={['next__img frame', `frame--${next.data.coverStyle ?? next.data.heroStyle}`]}>
+          <Image src={next.data.cover ?? next.data.hero} alt="" widths={[400, 700]} sizes="340px" />
+        </div>
+        <svg class="next__arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+      </a>
+    </div>
+  </article>
+
+  <!-- lightbox for enlarging figures -->
+  <dialog class="lightbox" data-lightbox-dialog aria-label="Enlarged image">
+    <button type="button" class="lightbox__close" data-lightbox-close aria-label="Close">×</button>
+    <img alt="" data-lightbox-img />
+    <p data-lightbox-cap></p>
+  </dialog>
+</Base>
+
+<style>
+  .proj__head { padding: clamp(28px, 5vw, 56px) 0 clamp(36px, 5vw, 56px); border-bottom: 1px solid var(--line); background: linear-gradient(180deg, transparent, rgba(124, 58, 237, 0.07)); }
+  .proj__back { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 0.82rem; color: var(--text-2); text-decoration: none; min-height: 44px; margin-bottom: 18px; }
+  .proj__back svg { width: 16px; height: 16px; }
+  .proj__back:hover { color: #fff; }
+  .proj__headgrid { display: grid; grid-template-columns: 1fr 1.05fr; gap: clamp(28px, 5vw, 64px); align-items: center; }
+  .proj__title { font-size: clamp(2.8rem, 7vw, 5.4rem); letter-spacing: -0.045em; margin: 16px 0 16px; line-height: 0.95; }
+  .proj__award { display: inline-flex; align-items: center; gap: 10px; padding: 8px 14px; border-radius: 10px; background: linear-gradient(90deg, rgba(250, 204, 21, 0.14), rgba(250, 204, 21, 0.02)); border: 1px solid rgba(250, 204, 21, 0.4); color: #fde68a; font-size: 0.9rem; font-weight: 500; }
+  .proj__award svg { width: 18px; height: 18px; flex: none; }
+  .proj__summary { font-size: clamp(1.04rem, 1.5vw, 1.16rem); color: var(--text-2); margin-top: 16px; }
+  .proj__role { margin-top: 20px; padding: 16px 18px; border-radius: 14px; border: 1px solid rgba(199, 155, 255, 0.4); background: linear-gradient(120deg, rgba(124, 58, 237, 0.25), rgba(18, 14, 28, 0.4)); }
+  .proj__role-badge { display: inline-block; font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; color: #fff; background: var(--accent-3); padding: 4px 10px; border-radius: 6px; margin-bottom: 8px; }
+  .proj__role p { margin: 0; color: var(--text); font-size: 0.97rem; }
+  .proj__hero { aspect-ratio: 4 / 3; box-shadow: 0 40px 120px -50px rgba(124, 58, 237, 0.7); }
+
+  .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); margin: clamp(32px, 4vw, 48px) 0 18px; border: 1px solid var(--line-strong); border-radius: 14px; overflow: hidden; background: rgba(18, 14, 28, 0.6); }
+  .facts__cell { padding: 14px 18px; border-right: 1px dashed var(--line); border-bottom: 1px dashed var(--line); margin-right: -1px; margin-bottom: -1px; }
+  .facts dt { font-family: var(--font-mono); font-size: 0.68rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent-2); margin-bottom: 4px; }
+  .facts dd { margin: 0; font-size: 0.93rem; color: var(--text); }
+  .facts__cell--domains dd { display: flex; flex-wrap: wrap; gap: 6px 14px; padding-top: 3px; }
+  .proj__tags { margin-top: 4px; }
+
+  .proj__layout { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: clamp(28px, 5vw, 72px); padding-top: clamp(40px, 6vw, 72px); }
+  .toc { position: sticky; top: 100px; align-self: start; }
+  .toc__title { font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+  .toc ol { list-style: none; margin: 0; padding: 0; border-left: 1px solid var(--line); }
+  .toc li a { display: flex; gap: 10px; padding: 9px 0 9px 16px; margin-left: -1px; border-left: 2px solid transparent; font-size: 0.9rem; color: var(--text-2); text-decoration: none; transition: color 0.2s, border-color 0.2s; }
+  .toc li a span { font-family: var(--font-mono); font-size: 0.72rem; color: var(--muted); padding-top: 2px; }
+  .toc li a:hover { color: #fff; }
+  .toc li a.is-active { color: #fff; border-left-color: var(--accent); }
+  .toc li a.is-active span { color: var(--accent-2); }
+  .toc__links { display: grid; gap: 6px; margin-top: 22px; }
+  .toc__links a { font-family: var(--font-mono); font-size: 0.78rem; text-decoration: none; }
+
+  /* ---------- prose (the project write-up) ---------- */
+  .prose { max-width: 860px; min-width: 0; }
+  :where(.prose) :global(h2) { font-size: clamp(1.9rem, 3.6vw, 2.6rem); margin: clamp(56px, 8vw, 88px) 0 18px; padding-top: 18px; position: relative; scroll-margin-top: 96px; }
+  :where(.prose) :global(h2:first-child) { margin-top: 0; }
+  :where(.prose) :global(h2)::before { content: ''; position: absolute; top: 0; left: 0; width: 56px; height: 3px; background: var(--accent); box-shadow: 0 0 16px var(--accent); }
+  :where(.prose) :global(h3) { margin: 40px 0 12px; color: #fff; }
+  :where(.prose) :global(p), .prose :global(li) { color: var(--text-2); font-size: 1.04rem; }
+  :where(.prose) :global(ul), .prose :global(ol) { padding-left: 22px; margin: 0 0 1.2em; }
+  :where(.prose) :global(li) { margin-bottom: 6px; }
+  :where(.prose) :global(li::marker) { color: var(--accent); }
+  :where(.prose) :global(table) { width: 100%; border-collapse: collapse; margin: 22px 0; font-size: 0.92rem; }
+  @media (max-width: 640px) { :where(.prose) :global(table) { display: block; overflow-x: auto; } }
+  :where(.prose) :global(thead th) { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent-2); text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line-strong); background: rgba(168, 85, 247, 0.07); white-space: nowrap; }
+  :where(.prose) :global(td) { padding: 10px 14px; border-bottom: 1px solid var(--line); color: var(--text-2); }
+  :where(.prose) :global(td strong) { color: #fff; }
+
+  .downloads__grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+  .downloads__item { position: relative; display: grid; gap: 4px; padding: 18px 44px 18px 18px; border-radius: 14px; border: 1px solid var(--line-strong); background: var(--panel); text-decoration: none; transition: border-color 0.2s, transform 0.3s var(--ease); }
+  .downloads__item:hover { border-color: var(--accent-2); transform: translateY(-3px); }
+  .downloads__kind { font-family: var(--font-mono); font-size: 0.68rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+  .downloads__label { color: #fff; font-weight: 600; }
+  .downloads__item svg { position: absolute; right: 16px; top: 50%; width: 18px; height: 18px; transform: translateY(-50%); color: var(--accent-2); }
+
+  .next { display: grid; grid-template-columns: 1fr 260px 48px; gap: 28px; align-items: center; margin-top: clamp(72px, 10vw, 120px); padding: clamp(20px, 3vw, 32px); border-radius: 22px; border: 1px solid var(--line-strong); background: linear-gradient(120deg, rgba(124, 58, 237, 0.22), var(--panel)); text-decoration: none; color: var(--text); transition: border-color 0.3s, transform 0.4s var(--ease); }
+  .next:hover { border-color: var(--accent-2); color: var(--text); transform: translateY(-4px); }
+  .next__title { font-family: var(--font-display); font-weight: 700; font-size: clamp(1.8rem, 4vw, 2.8rem); margin: 10px 0 4px; letter-spacing: -0.03em; }
+  .next__sub { color: var(--text-2); margin: 0; }
+  .next__img { aspect-ratio: 16 / 10; border-radius: 12px; }
+  .next__arrow { width: 36px; height: 36px; color: var(--accent-2); transition: transform 0.3s var(--ease); }
+  .next:hover .next__arrow { transform: translateX(6px); }
+
+  .lightbox { max-width: min(96vw, 1600px); max-height: 94vh; padding: 0; border: 1px solid var(--line-strong); border-radius: 16px; background: #0b0812; color: var(--text); overflow: auto; }
+  .lightbox::backdrop { background: rgba(4, 3, 8, 0.86); backdrop-filter: blur(6px); }
+  .lightbox img { max-width: 100%; max-height: 84vh; margin: 0 auto; object-fit: contain; background: #f1eef7; }
+  .lightbox p { margin: 0; padding: 12px 18px; font-size: 0.88rem; color: var(--text-2); font-family: var(--font-mono); }
+  .lightbox__close { position: absolute; top: 10px; right: 10px; width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line-strong); background: rgba(7, 6, 11, 0.8); color: #fff; font-size: 1.6rem; line-height: 1; cursor: pointer; }
+
+  @media (max-width: 960px) {
+    .proj__headgrid { grid-template-columns: 1fr; }
+    .proj__hero { order: -1; }
+    .proj__layout { grid-template-columns: 1fr; }
+    .toc { position: static; padding: 16px 18px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); }
+    .toc ol { display: flex; flex-wrap: wrap; gap: 4px 10px; border-left: 0; }
+    .toc li a { padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; margin: 0; }
+    .toc__links { display: none; }
+    .next { grid-template-columns: 1fr 48px; }
+    .next__img { display: none; }
+  }
+</style>
+
+<script>
+  // Type the project title.
+  const t = document.querySelector<HTMLElement>('[data-typetitle]');
+  if (t && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const full = t.textContent || '';
+    t.parentElement?.setAttribute('aria-label', full);
+    t.setAttribute('aria-hidden', 'true');
+    t.textContent = '';
+    let i = 0;
+    const step = () => {
+      t.textContent = full.slice(0, ++i);
+      if (i < full.length) setTimeout(step, 55 + Math.random() * 45);
+    };
+    setTimeout(step, 250);
+  }
+
+  // Highlight the current section in the side nav.
+  const links = [...document.querySelectorAll<HTMLAnchorElement>('[data-toc]')];
+  const targets = links.map((a) => document.getElementById(a.dataset.toc || '')).filter(Boolean) as HTMLElement[];
+  if ('IntersectionObserver' in window && targets.length) {
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) links.forEach((a) => a.classList.toggle('is-active', a.dataset.toc === e.target.id));
+        });
+      },
+      { rootMargin: '-20% 0px -70% 0px' }
+    );
+    targets.forEach((el) => io.observe(el));
+  }
+
+  // Lightbox: click a figure to see it full size.
+  const dlg = document.querySelector<HTMLDialogElement>('[data-lightbox-dialog]');
+  const img = document.querySelector<HTMLImageElement>('[data-lightbox-img]');
+  const cap = document.querySelector<HTMLElement>('[data-lightbox-cap]');
+  document.querySelectorAll<HTMLAnchorElement>('[data-lightbox]').forEach((a) =>
+    a.addEventListener('click', (e) => {
+      if (!dlg || !img || typeof dlg.showModal !== 'function') return;
+      e.preventDefault();
+      img.src = a.href;
+      img.alt = a.querySelector('img')?.alt || '';
+      if (cap) cap.textContent = a.dataset.caption || '';
+      dlg.showModal();
+    })
+  );
+  document.querySelector('[data-lightbox-close]')?.addEventListener('click', () => dlg?.close());
+  dlg?.addEventListener('click', (e) => {
+    if (e.target === dlg) dlg.close();
+  });
+</script>

@@ -1,0 +1,34 @@
+---
+// Research poster: large image with a download button for the PDF.
+import { Image } from 'astro:assets';
+import { projectImage } from './images';
+interface Props { src: string; alt: string; pdf: string; title: string; note?: string }
+const { src, alt, pdf, title, note } = Astro.props;
+const img = projectImage(src);
+---
+<figure class="poster reveal">
+  <div class="poster__head">
+    <div>
+      <p class="poster__kicker">Research poster</p>
+      <p class="poster__title">{title}</p>
+      {note && <p class="poster__note">{note}</p>}
+    </div>
+    <a class="btn btn--primary" href={pdf} target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3v12m0 0-5-5m5 5 5-5M5 21h14"/></svg>
+      Open full PDF
+    </a>
+  </div>
+  <a class="poster__img" href={img.src} data-lightbox data-caption={title} aria-label={`Open full size: ${alt}`}>
+    <Image src={img} alt={alt} widths={[700, 1200, 2000]} sizes="(max-width: 1100px) 100vw, 1100px" />
+  </a>
+</figure>
+
+<style>
+  .poster { margin: 34px 0; padding: 18px; border-radius: 20px; border: 1px solid var(--line-strong); background: linear-gradient(160deg, var(--panel-2), var(--bg-2)); }
+  .poster__head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 16px; }
+  .poster__kicker { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent-2); margin: 0 0 4px; }
+  .poster__title { font-family: var(--font-display); font-weight: 600; font-size: 1.15rem; margin: 0; }
+  .poster__note { font-size: 0.86rem; color: var(--muted); margin: 4px 0 0; }
+  .poster__img { display: block; border-radius: 12px; overflow: hidden; background: #fff; cursor: zoom-in; }
+  .poster__img :global(img) { width: 100%; height: auto; }
+</style>

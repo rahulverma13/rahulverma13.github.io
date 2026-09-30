@@ -1,0 +1,17 @@
+---
+import Base from '../layouts/Base.astro';
+---
+<Base title="Page not found">
+  <section class="container nf">
+    <p class="eyebrow">Error 404</p>
+    <h1>This part isn't in the assembly.</h1>
+    <p>The page you're looking for doesn't exist or has moved.</p>
+    <a class="btn btn--primary" href="/">Back to home</a>
+  </section>
+</Base>
+
+<style>
+  .nf { min-height: 60vh; display: grid; align-content: center; justify-items: start; gap: 16px; padding-block: 80px; }
+  h1 { font-size: clamp(2.2rem, 6vw, 4rem); margin: 0; }
+  p:not(.eyebrow) { color: var(--text-2); margin: 0 0 12px; }
+</style>

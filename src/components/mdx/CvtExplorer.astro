@@ -1,0 +1,159 @@
+---
+// Interactive explainer for the Swomni CVT effect.
+// One omni wheel, seen from above. The robot drives straight "up" the screen.
+const INIT = 52; // degrees; ≈ the 1.63× speed-up measured on the real robot
+const MAX = 75;
+const WR = 78; // pixel length of the motor-driven component (ωr)
+const O = { x: 170, y: 318 };
+
+function geom(deg: number) {
+  const t = (deg * Math.PI) / 180;
+  const V = WR / Math.cos(t);
+  const hx = Math.sin(t), hy = -Math.cos(t);
+  return {
+    t,
+    mult: 1 / Math.cos(t),
+    traction: Math.cos(t),
+    along: { x: O.x + WR * hx, y: O.y + WR * hy },
+    vel: { x: O.x, y: O.y - V },
+  };
+}
+const g = geom(INIT);
+
+// plot of speed multiplier vs angle
+const P = { x0: 46, y0: 196, w: 250, h: 170 }; // origin bottom-left
+const px = (deg: number) => P.x0 + (deg / MAX) * P.w;
+const py = (m: number) => P.y0 - ((m - 1) / 3) * P.h; // 1× .. 4×
+const curve = Array.from({ length: 76 }, (_, d) => `${d ? 'L' : 'M'}${px(d).toFixed(1)},${py(1 / Math.cos((d * Math.PI) / 180)).toFixed(1)}`).join(' ');
+---
+<div class="cvt reveal" data-cvt data-wr={WR} data-ox={O.x} data-oy={O.y} data-max={MAX}>
+  <div class="cvt__head">
+    <p class="cvt__kicker">Interactive · try it</p>
+    <p class="cvt__title">Angle the wheel, watch the speed ceiling rise</p>
+  </div>
+
+  <div class="cvt__body">
+    <svg class="cvt__vec" viewBox="0 0 340 360" role="img" aria-labelledby="cvt-desc">
+      <desc id="cvt-desc">Top-down view of one omni wheel angled at θ from the direction of travel. The motor drives the wheel at a fixed surface speed ωr along its heading; the free rollers absorb the sideways component; the resulting robot velocity is ωr divided by cos θ.</desc>
+      <defs>
+        <marker id="ah-w" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#ffffff" /></marker>
+        <marker id="ah-p" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b57bff" /></marker>
+        <marker id="ah-t" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#5eead4" /></marker>
+        <pattern id="cvt-grid" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M20 0H0V20" fill="none" stroke="rgba(176,140,255,.12)" /></pattern>
+      </defs>
+      <rect width="340" height="360" fill="url(#cvt-grid)" />
+      <!-- direction of travel -->
+      <line x1={O.x} y1="370" x2={O.x} y2="10" stroke="rgba(255,255,255,.18)" stroke-dasharray="4 6" />
+      <text x={O.x + 8} y="22" class="cvt__axis">direction of travel</text>
+      <!-- the wheel -->
+      <g data-wheel transform={`rotate(${INIT} ${O.x} ${O.y})`}>
+        <rect x={O.x - 13} y={O.y - 38} width="26" height="76" rx="8" fill="#2b2140" stroke="#b57bff" stroke-width="1.5" />
+        {[-26, -13, 0, 13, 26].map((dy) => <rect x={O.x - 16} y={O.y + dy - 4} width="32" height="8" rx="3" fill="#5a4a78" />)}
+      </g>
+      <!-- vectors -->
+      <line data-along x1={O.x} y1={O.y} x2={g.along.x} y2={g.along.y} stroke="#b57bff" stroke-width="4" marker-end="url(#ah-p)" />
+      <line data-perp x1={g.along.x} y1={g.along.y} x2={g.vel.x} y2={g.vel.y} stroke="#5eead4" stroke-width="3" stroke-dasharray="7 5" marker-end="url(#ah-t)" />
+      <line data-vel x1={O.x} y1={O.y} x2={g.vel.x} y2={g.vel.y} stroke="#ffffff" stroke-width="4" marker-end="url(#ah-w)" />
+      <path data-arc fill="none" stroke="rgba(255,255,255,.55)" stroke-width="1.5" />
+      <text data-theta class="cvt__lbl" fill="#fff">θ</text>
+      <text data-vlbl class="cvt__lbl" fill="#fff" x={O.x - 30} y={(O.y + g.vel.y) / 2}>V</text>
+    </svg>
+
+    <div class="cvt__side">
+      <label class="cvt__slider">
+        <span>Wheel angle θ <output data-out-deg>{INIT}°</output></span>
+        <input type="range" min="0" max={MAX} step="1" value={INIT} data-input aria-describedby="cvt-readout" />
+      </label>
+
+      <dl class="cvt__readout" id="cvt-readout" aria-live="polite">
+        <div><dt>Top speed</dt><dd><span data-out-mult>{g.mult.toFixed(2)}</span>× motor limit</dd></div>
+        <div><dt>Forward traction</dt><dd><span data-out-trac>{Math.round(g.traction * 100)}</span>% of full</dd></div>
+      </dl>
+      <div class="cvt__meter" aria-hidden="true"><span data-meter style={`width:${g.traction * 100}%`}></span></div>
+
+      <svg class="cvt__plot" viewBox="0 0 320 236" role="img" aria-label="Plot of speed multiplier 1 over cos theta versus wheel angle, rising from 1 at 0 degrees to about 3.9 at 75 degrees, with the measured 1.63 times marked.">
+        {[1, 2, 3, 4].map((m) => (
+          <g>
+            <line x1={P.x0} x2={P.x0 + P.w} y1={py(m)} y2={py(m)} stroke="rgba(176,140,255,.14)" />
+            <text x={P.x0 - 8} y={py(m) + 4} text-anchor="end" class="cvt__tick">{m}×</text>
+          </g>
+        ))}
+        {[0, 25, 50, 75].map((d) => <text x={px(d)} y={P.y0 + 18} text-anchor="middle" class="cvt__tick">{d}°</text>)}
+        <line x1={P.x0} x2={P.x0 + P.w} y1={py(1.63)} y2={py(1.63)} stroke="#5eead4" stroke-dasharray="4 4" />
+        <text x={P.x0 + P.w} y={py(1.63) - 6} text-anchor="end" class="cvt__tick" fill="#5eead4">measured 1.63×</text>
+        <path d={curve} fill="none" stroke="#b57bff" stroke-width="2" />
+        <circle data-dot cx={px(INIT)} cy={py(g.mult)} r="6" fill="#fff" stroke="#a855f7" stroke-width="3" />
+        <text x={P.x0 + P.w / 2} y="234" text-anchor="middle" class="cvt__tick">wheel angle θ</text>
+      </svg>
+    </div>
+  </div>
+
+  <ul class="cvt__legend">
+    <li><i style="background:#b57bff"></i>ωr: speed the motor drives the wheel at (fixed)</li>
+    <li><i style="background:#5eead4"></i>Sideways slip taken up by the free rollers</li>
+    <li><i style="background:#fff"></i>V: resulting robot speed = ωr / cos θ</li>
+  </ul>
+</div>
+
+<style>
+  .cvt { margin: 34px 0; padding: clamp(16px, 3vw, 26px); border-radius: 20px; border: 1px solid var(--line-strong); background: linear-gradient(160deg, #150f24, #0b0812); box-shadow: 0 30px 80px -50px rgba(124, 58, 237, 0.8); }
+  .cvt__kicker { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent-2); margin: 0 0 4px; }
+  .cvt__title { font-family: var(--font-display); font-weight: 600; font-size: 1.2rem; margin: 0 0 16px; }
+  .cvt__body { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; align-items: start; }
+  .cvt__vec { width: 100%; border-radius: 14px; border: 1px solid var(--line); background: #0a0711; }
+  .cvt__axis { font-family: var(--font-mono); font-size: 10px; fill: var(--muted); }
+  .cvt__lbl { font-family: var(--font-display); font-weight: 700; font-size: 16px; }
+  .cvt__tick { font-family: var(--font-mono); font-size: 10px; fill: var(--muted); }
+  .cvt__slider { display: grid; gap: 10px; font-family: var(--font-mono); font-size: 0.86rem; color: var(--text-2); }
+  .cvt__slider output { color: #fff; font-weight: 700; margin-left: 6px; }
+  input[type='range'] { width: 100%; height: 44px; accent-color: var(--accent); cursor: pointer; background: transparent; }
+  .cvt__readout { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 8px 0 10px; }
+  .cvt__readout div { display: flex; flex-direction: column-reverse; justify-content: flex-end; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line); background: rgba(255, 255, 255, 0.02); }
+  .cvt__readout dt { font-size: 0.78rem; color: var(--muted); }
+  .cvt__readout dd { margin: 0; font-size: 0.86rem; color: var(--text-2); }
+  .cvt__readout dd span { font-family: var(--font-display); font-weight: 700; font-size: 1.6rem; color: #fff; margin-right: 4px; }
+  .cvt__meter { height: 6px; border-radius: 6px; background: rgba(255, 255, 255, 0.07); overflow: hidden; margin-bottom: 16px; }
+  .cvt__meter span { display: block; height: 100%; background: linear-gradient(90deg, var(--accent-3), var(--accent-2)); }
+  .cvt__plot { width: 100%; }
+  .cvt__legend { list-style: none; padding: 0; margin: 18px 0 0; display: flex; flex-wrap: wrap; gap: 8px 22px; font-size: 0.84rem; color: var(--text-2); }
+  .cvt__legend i { display: inline-block; width: 14px; height: 4px; border-radius: 2px; margin-right: 8px; vertical-align: middle; }
+  @media (max-width: 760px) { .cvt__body { grid-template-columns: 1fr; } }
+</style>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-cvt]').forEach((root) => {
+    const WR = Number(root.dataset.wr), OX = Number(root.dataset.ox), OY = Number(root.dataset.oy), MAX = Number(root.dataset.max);
+    const $ = <T extends Element>(s: string) => root.querySelector(s) as T;
+    const input = $<HTMLInputElement>('[data-input]');
+    const P = { x0: 46, y0: 196, w: 250, h: 170 };
+    const set = (el: Element, attrs: Record<string, string | number>) => Object.entries(attrs).forEach(([k, v]) => el.setAttribute(k, String(v)));
+
+    const update = () => {
+      const deg = Number(input.value);
+      const t = (deg * Math.PI) / 180;
+      const V = WR / Math.cos(t);
+      const ax = OX + WR * Math.sin(t), ay = OY - WR * Math.cos(t);
+      const vy = OY - V;
+      set($('[data-wheel]'), { transform: `rotate(${deg} ${OX} ${OY})` });
+      set($('[data-along]'), { x2: ax, y2: ay });
+      set($('[data-perp]'), { x1: ax, y1: ay, x2: OX, y2: vy });
+      set($('[data-vel]'), { y2: vy });
+      $('[data-perp]').setAttribute('visibility', deg < 2 ? 'hidden' : 'visible');
+      // angle arc between travel direction and wheel heading
+      const r = 44;
+      const ex = OX + r * Math.sin(t), ey = OY - r * Math.cos(t);
+      set($('[data-arc]'), { d: `M${OX},${OY - r} A${r},${r} 0 0 1 ${ex},${ey}` });
+      const lt = t / 2;
+      set($('[data-theta]'), { x: OX + (r + 14) * Math.sin(lt) - 4, y: OY - (r + 14) * Math.cos(lt) + 5 });
+      set($('[data-vlbl]'), { y: (OY + vy) / 2 });
+      const mult = 1 / Math.cos(t);
+      $('[data-out-deg]').textContent = `${deg}°`;
+      $('[data-out-mult]').textContent = mult.toFixed(2);
+      $('[data-out-trac]').textContent = String(Math.round(Math.cos(t) * 100));
+      ($('[data-meter]') as HTMLElement).style.width = `${Math.cos(t) * 100}%`;
+      set($('[data-dot]'), { cx: P.x0 + (deg / MAX) * P.w, cy: P.y0 - ((mult - 1) / 3) * P.h });
+    };
+    input.addEventListener('input', update);
+    update();
+  });
+</script>

@@ -1,0 +1,148 @@
+---
+// Simple, accessible line chart drawn at build time (one series).
+// points: [{ x: 0.4, y: 2.40 }]. y: null means "did not finish" and is marked on the axis.
+interface Pt { x: number; y: number | null }
+interface Props {
+  title: string;
+  points: Pt[];
+  xLabel: string;
+  yLabel: string;
+  xFormat?: 'percent' | 'number';
+  yUnit?: string;
+  yDomain?: [number, number];
+  band?: { from: number; to: number; label: string };
+  best?: boolean; // highlight the minimum
+  note?: string;
+}
+const { title, points, xLabel, yLabel, xFormat = 'number', yUnit = '', yDomain, band, best = false, note } = Astro.props;
+
+const W = 760, H = 340, M = { t: 28, r: 24, b: 52, l: 60 };
+const iw = W - M.l - M.r, ih = H - M.t - M.b;
+const xs = points.map((p) => p.x);
+const ys = points.filter((p) => p.y !== null).map((p) => p.y as number);
+const [x0, x1] = [Math.min(...xs), Math.max(...xs)];
+const pad = (Math.max(...ys) - Math.min(...ys)) * 0.15 || 1;
+const [y0, y1] = yDomain ?? [Math.min(...ys) - pad, Math.max(...ys) + pad];
+const sx = (x: number) => M.l + ((x - x0) / (x1 - x0)) * iw;
+const sy = (y: number) => M.t + ih - ((y - y0) / (y1 - y0)) * ih;
+const fx = (x: number) => (xFormat === 'percent' ? `${Math.round(x * 100)}%` : String(x));
+const fy = (y: number) => `${y.toFixed(2)}${yUnit}`;
+
+// nice y ticks
+const step = (() => {
+  const raw = (y1 - y0) / 4;
+  const mag = 10 ** Math.floor(Math.log10(raw));
+  return [1, 2, 2.5, 5, 10].map((m) => m * mag).find((s) => s >= raw) ?? raw;
+})();
+const yTicks: number[] = [];
+for (let v = Math.ceil(y0 / step) * step; v <= y1 + 1e-9; v += step) yTicks.push(+v.toFixed(6));
+
+const valid = points.filter((p) => p.y !== null) as { x: number; y: number }[];
+const path = valid.map((p, i) => `${i ? 'L' : 'M'}${sx(p.x).toFixed(1)},${sy(p.y).toFixed(1)}`).join(' ');
+const min = best ? valid.reduce((a, b) => (b.y < a.y ? b : a)) : null;
+const dnf = points.filter((p) => p.y === null);
+const id = `lc-${Math.random().toString(36).slice(2, 8)}`;
+---
+<figure class="lc reveal" data-chart>
+  <figcaption class="lc__title" id={`${id}-t`}>{title}</figcaption>
+  <div class="lc__wrap">
+    <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-labelledby={`${id}-t`}>
+      {band && (
+        <g>
+          <rect x={sx(band.from)} y={M.t} width={sx(band.to) - sx(band.from)} height={ih} fill="rgba(168,85,247,.12)" />
+          <text x={(sx(band.from) + sx(band.to)) / 2} y={M.t + 14} text-anchor="middle" class="lc__band">{band.label}</text>
+        </g>
+      )}
+      {yTicks.map((t) => (
+        <g>
+          <line x1={M.l} x2={W - M.r} y1={sy(t)} y2={sy(t)} class="lc__grid" />
+          <text x={M.l - 10} y={sy(t) + 4} text-anchor="end" class="lc__tick">{t.toFixed(step < 1 ? 1 : 0)}</text>
+        </g>
+      ))}
+      {points.map((p) => <text x={sx(p.x)} y={H - M.b + 18} text-anchor="middle" class="lc__tick">{fx(p.x)}</text>)}
+      <line x1={M.l} x2={W - M.r} y1={M.t + ih} y2={M.t + ih} class="lc__axis" />
+      <text x={M.l + iw / 2} y={H - 8} text-anchor="middle" class="lc__lab">{xLabel}</text>
+      <text transform={`translate(14 ${M.t + ih / 2}) rotate(-90)`} text-anchor="middle" class="lc__lab">{yLabel}</text>
+
+      <path d={path} fill="none" stroke="#b57bff" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" />
+      {valid.map((p) => (
+        <g class="lc__pt" tabindex="0" data-tip={`${fx(p.x)} → ${fy(p.y)}`} aria-label={`${fx(p.x)}: ${fy(p.y)}`}>
+          <circle cx={sx(p.x)} cy={sy(p.y)} r="4.5" fill="#b57bff" stroke="#0d0a15" stroke-width="2" />
+          <circle cx={sx(p.x)} cy={sy(p.y)} r="14" fill="transparent" />
+        </g>
+      ))}
+      {min && (
+        <g>
+          <circle cx={sx(min.x)} cy={sy(min.y)} r="8" fill="none" stroke="#fff" stroke-width="2" />
+          <text x={sx(min.x)} y={sy(min.y) - 16} text-anchor="middle" class="lc__best">{fy(min.y)} fastest</text>
+        </g>
+      )}
+      {dnf.map((p) => (
+        <g>
+          <text x={sx(p.x)} y={M.t + ih - 14} text-anchor="middle" class="lc__dnf">DNF</text>
+          <title>{`${fx(p.x)}: did not finish (not enough acceleration)`}</title>
+        </g>
+      ))}
+    </svg>
+    <div class="lc__tip" role="status" aria-live="polite" data-tip-box hidden></div>
+  </div>
+  {note && <p class="lc__note">{note}</p>}
+  <details class="lc__table">
+    <summary>Show data table</summary>
+    <table>
+      <thead><tr><th scope="col">{xLabel}</th><th scope="col">{yLabel}</th></tr></thead>
+      <tbody>{points.map((p) => <tr><td>{fx(p.x)}</td><td>{p.y === null ? 'Did not finish' : fy(p.y)}</td></tr>)}</tbody>
+    </table>
+  </details>
+</figure>
+
+<style>
+  .lc { margin: 24px 0; padding: 18px 18px 14px; border-radius: 16px; border: 1px solid var(--line); background: linear-gradient(160deg, #130e1f, #0b0812); }
+  .lc__title { font-family: var(--font-display); font-weight: 600; font-size: 1.02rem; margin-bottom: 8px; }
+  .lc__wrap { position: relative; }
+  svg { width: 100%; height: auto; overflow: visible; }
+  .lc__grid { stroke: rgba(176, 140, 255, 0.12); }
+  .lc__axis { stroke: rgba(176, 140, 255, 0.4); }
+  .lc__tick { font-family: var(--font-mono); font-size: 12px; fill: var(--muted); }
+  .lc__lab { font-family: var(--font-mono); font-size: 12px; fill: var(--text-2); }
+  .lc__band { font-family: var(--font-mono); font-size: 10.5px; fill: var(--accent-2); letter-spacing: 0.06em; }
+  .lc__best { font-family: var(--font-mono); font-size: 13px; fill: #fff; font-weight: 700; }
+  .lc__dnf { font-family: var(--font-mono); font-size: 10px; fill: #ff9fb3; font-weight: 700; }
+  .lc__pt { cursor: pointer; outline: none; }
+  .lc__pt:hover circle:nth-child(2), .lc__pt:focus circle:nth-child(2) { r: 7; fill: #fff; }
+  .lc__tip { position: absolute; pointer-events: none; transform: translate(-50%, -130%); padding: 6px 10px; border-radius: 8px; background: #fff; color: #120e1c; font-family: var(--font-mono); font-size: 0.78rem; font-weight: 600; white-space: nowrap; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4); }
+  .lc__note { font-size: 0.84rem; color: var(--muted); margin: 8px 0 0; }
+  .lc__table { margin-top: 8px; font-size: 0.84rem; color: var(--text-2); }
+  .lc__table summary { cursor: pointer; font-family: var(--font-mono); font-size: 0.76rem; color: var(--accent-2); min-height: 32px; display: flex; align-items: center; }
+  .lc__table table { border-collapse: collapse; margin-top: 8px; width: 100%; }
+  .lc__table th, .lc__table td { text-align: left; padding: 4px 8px; border-bottom: 1px solid var(--line); font-family: var(--font-mono); font-size: 0.78rem; }
+</style>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-chart]').forEach((fig) => {
+    const box = fig.querySelector<HTMLElement>('[data-tip-box]');
+    const svg = fig.querySelector('svg');
+    if (!box || !svg) return;
+    const show = (g: SVGGElement) => {
+      const c = g.querySelector('circle');
+      if (!c) return;
+      const pt = svg.createSVGPoint();
+      pt.x = Number(c.getAttribute('cx'));
+      pt.y = Number(c.getAttribute('cy'));
+      const m = svg.getScreenCTM();
+      const wrap = box.parentElement!.getBoundingClientRect();
+      if (!m) return;
+      const p = pt.matrixTransform(m);
+      box.textContent = g.dataset.tip || '';
+      box.style.left = `${p.x - wrap.left}px`;
+      box.style.top = `${p.y - wrap.top}px`;
+      box.hidden = false;
+    };
+    fig.querySelectorAll<SVGGElement>('[data-tip]').forEach((g) => {
+      g.addEventListener('pointerenter', () => show(g));
+      g.addEventListener('focus', () => show(g));
+      g.addEventListener('pointerleave', () => (box.hidden = true));
+      g.addEventListener('blur', () => (box.hidden = true));
+    });
+  });
+</script>

@@ -1,0 +1,18 @@
+---
+// Highlighted box. kind: "key" (purple), "role" (my contribution), "note"
+interface Props { title?: string; kind?: 'key' | 'role' | 'note' }
+const { title, kind = 'key' } = Astro.props;
+---
+<aside class:list={['callout reveal', `callout--${kind}`]}>
+  {title && <p class="callout__title">{title}</p>}
+  <div class="callout__body"><slot /></div>
+</aside>
+
+<style>
+  .callout { margin: 28px 0; padding: 20px 22px; border-radius: 14px; border: 1px solid var(--line-strong); background: rgba(168, 85, 247, 0.08); }
+  .callout--role { background: linear-gradient(120deg, rgba(124, 58, 237, 0.28), rgba(18, 14, 28, 0.6)); border-color: rgba(199, 155, 255, 0.45); }
+  .callout--note { background: rgba(255, 255, 255, 0.03); border-style: dashed; }
+  .callout__title { font-family: var(--font-mono); font-size: 0.74rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent-2); margin: 0 0 8px; }
+  .callout__body :global(p:last-child), .callout__body :global(ul:last-child) { margin-bottom: 0; }
+  .callout__body :global(ul) { padding-left: 20px; }
+</style>

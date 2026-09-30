@@ -1,0 +1,192 @@
+---
+title: Telescopic Arm
+subtitle: Four-stage aluminum boxtube arm that extends and pivots
+order: 3
+status: published
+summary: A fully custom telescoping, pivoting arm built from four nested, pocketed aluminum tubes with bearing inserts tuned to hundredths of a millimeter. 48 design iterations made it 4× stiffer and 47% lighter than off-the-shelf slides, and a gain-scheduled controller keeps it steady as its inertia changes.
+roleBadge: Team project · CAD & build lead
+roleDetail: Built for my FIRST Tech Challenge team, Runtime Terror 22105. I designed the entire arm in CAD, led the build, and contributed to the software. On the controls side I derived the gain-scheduling feedforward model that adapts to the arm's changing center of mass.
+domains: [Mechanical, Electrical, Software]
+tags: [Mechanism design, Tolerancing, CAD, Cascade rigging, Gain scheduling, Feedforward control, 3D printing, Aluminum machining]
+highlights:
+  - { value: "48", label: "design iterations" }
+  - { value: "4×", label: "stiffer than linear slides" }
+  - { value: "0.4 s", label: "full extension" }
+facts:
+  role: "Full CAD designer, build lead, controls (gain-scheduling feedforward)"
+  timeline: "2025 – 2026"
+  team: "FTC Team 22105 Runtime Terror"
+  tools: "CAD, 3D printing, aluminum inserts & tubing, encoders, Java"
+hero: ./images/arm-cad.png
+heroAlt: CAD render of the telescopic arm with four nested pocketed aluminum tubes, pink bearing inserts and the pivot axle
+heroStyle: plate
+links:
+  - { label: Arm on the full robot (video), href: "https://youtube.com/shorts/5_ZiCBP7eeU", kind: Video }
+  - { label: Arm assembly (video), href: "https://www.youtube.com/shorts/D64In4TDJXU", kind: Video }
+---
+
+## Overview
+
+<Grid cols={2} align="start">
+<div>
+
+This arm is the main scoring mechanism of an FTC competition robot, and the most complex part on it. It does two things at once: it **extends** like a telescope and it **pivots** up and down, with both motions driven coaxially from motors mounted low on the robot.
+
+Instead of buying linear slides, I designed a **boxtube arm**: four nested, pocketed aluminum tubes from **2″ × 2″ down to 0.5″ × 0.5″**. Custom bearing inserts guide each stage, and cascade-strung cord extends all four stages at once.
+
+The hard part was making it **rigid**. Nested square tubes want to wobble, so most of the work was a long iteration loop on the inserts. The other hard part was **control**: an arm whose length changes also changes its center of mass and moment of inertia, which breaks a plain PID loop.
+
+</div>
+<Video id="5_ZiCBP7eeU" title="Telescopic arm scoring on the full competition robot" vertical featured caption="The arm in action on the full robot" />
+</Grid>
+
+<Stats cols={3} items={[
+  { value: "48", label: "Iterations on the boxtube (21 inside inserts, 22 outside inserts, 3 spools, 2 wiring mounts)" },
+  { value: "4×", label: "More rigid than linear slides" },
+  { value: "47%", label: "Lighter than linear slides (395 g vs. 758 g)" },
+  { value: "<5 mm", label: "Slop at full extension (down from 31 mm)" },
+  { value: "0.4 s", label: "Full extension" },
+  { value: "0.25 s", label: "90° pivot" }
+]} />
+
+## Design
+
+<Figure src="telescopic-arm/arm-cad.png" variant="plate" alt="CAD render of the full telescopic arm: pivot axle and spool at the base, four nested pocketed tubes, and pink bearing inserts at each stage" caption="Full arm in CAD, from the 32 mm pivot axle to the 0.5″ final stage" />
+
+### Key features
+
+- **Four pocketed aluminum tubes**, 2″ × 2″ down to 0.5″ × 0.5″, with isogrid pocketing to cut weight
+- **Four-directional support** at every stage from bearing-based inserts, inside and outside each tube
+- **Cascade-strung extension** with four total strings, pulling every stage out together from a 36 mm / 12 mm spool
+- **32 mm aluminum tube pivot axle**, with extension and pivot powered coaxially
+- **Aluminum inserts integrated with 3D-printed parts** where the loads are highest, plus wiring zip-tie mounts
+- Fits in a compact **2″ × 2″** footprint
+
+### Why a boxtube?
+
+| | Boxtube arm | Linear slides |
+|---|---|---|
+| Rigidity | **4× stiffer**, supported in all four directions | 1× |
+| Mass | **395 g** (47% lighter) | 758 g |
+
+The design carried real risk, so I reduced it up front by planning the stringing carefully, keeping the pocketing accessible for assembly, and getting CAD feedback from FTC team #5064, who have built boxtube mechanisms before.
+
+## Iteration
+
+Every stage of the arm rides on custom **bearing inserts**: an *inside* insert fixed to the bottom of each inner tube, and an *outside* insert at the mouth of each outer tube. Getting them right took **43 iterations**, balancing two goals that fight each other: rigidity (tight fit) and smooth, low-friction sliding (loose fit).
+
+### Inside bearing inserts
+
+<Figure src="telescopic-arm/inside-inserts.png" variant="plate" alt="Three pink inside bearing inserts at the base of the 0.5, 1 and 1.5 inch tubes, each with bearings on all four sides" caption="Final inside inserts for the 0.5″, 1″ and 1.5″ tubes" />
+
+<Grid cols={2} align="center">
+<Figure src="telescopic-arm/inside-v1-v2.png" variant="plate" alt="Version 1 gray insert with small side bearings next to version 2 pink insert with larger bearings" caption="V1 → V2" />
+<div>
+
+- **V1:** small bearings (2.5 mm wide, 6 mm OD) gave low contact area; the screw was hard to tighten and thin walls around the rods could break
+- **V2:** larger bearings (4 mm wide, 8 mm OD) for more contact area, a nut capture for the screw, and more printed material around the rods
+
+</div>
+</Grid>
+
+<Grid cols={2} align="center">
+<div>
+
+**Constraining the bearings** took three tries of its own:
+
+1. **Sprung pin:** poor tolerances, hard assembly
+2. **Dowel pin:** good tolerances, still hard to assemble
+3. **Threaded rod as a dead axle:** good tolerances *and* easy assembly, with an integrated shim to locate each bearing
+
+</div>
+<Figure src="telescopic-arm/inside-bearings.png" variant="plate" alt="Transparent view of an inside insert showing four bearings mounted on threaded rods" caption="Final design: bearings on threaded-rod dead axles" />
+</Grid>
+
+<Figure src="telescopic-arm/bearing-pins.png" variant="plate" alt="Sprung pin, then dowel pin, then threaded rod, with arrows between them" caption="Sprung pin → dowel pin → threaded rod" />
+
+### Outside bearing inserts
+
+<Figure src="telescopic-arm/outer-inserts.png" variant="plate" alt="Three pink outside bearing inserts clamped around tube ends, each with rows of bearings on rods" caption="Final outside inserts: 19 bearings give four-directional support" />
+
+<Grid cols={2} align="center">
+<Figure src="telescopic-arm/outer-v1-v2.png" variant="plate" alt="Side-by-side close-ups of V1 and V2 outside inserts with the side bearing circled in red; V2 has a larger bearing and aluminum-backed plate" caption="V1 (left) vs. V2 (right): larger side bearings, aluminum backing" />
+<div>
+
+- **V1** was easy to make, but side bearings broke, the 3D-printed body flexed, and the arm had **31 mm of slop** at full extension
+- **V2** uses **12 mm side bearings** held by dowel pins, an **aluminum-backed inner plate** with tapped holes for the printed parts, and swappable plates for tuning the fit: **5 mm max slop**
+
+We bought 30 aluminum insert plates so the front, back and side fits could each be tuned independently.
+
+</div>
+</Grid>
+
+### Tolerancing to 0.01 mm
+
+<Grid cols={2} align="center">
+<Figure src="telescopic-arm/tolerance-section.png" variant="plate" alt="Section view of an insert inside a tube with the bearing-to-wall contact points circled in red" caption="Bearing-to-wall contact, the fit being tuned" />
+<div>
+
+Insert clearances were fine-tuned to a precision of **0.01 mm**, so each stage slides freely with almost no play. The inside and outside inserts each have their own clearance per tube size, and the outside inserts are tuned separately on the side and front faces.
+
+</div>
+</Grid>
+
+| Tube | Inside insert | Outside insert (side) | Outside insert (front) |
+|---|---|---|---|
+| 0.5″ | 0.08 mm | none | none |
+| 1″ | 0.20 mm | 0.35 mm | 0.20 mm |
+| 1.5″ | 0.31 mm | 0.15 mm | 0.43 mm |
+| 2″ | none | 0.25 mm | 0.30 mm |
+
+<Grid cols={2} align="center">
+<Figure src="telescopic-arm/insert-plates.png" variant="plate" ratio="1/1" alt="Grid of laser-cut aluminum insert plates in several sizes" caption="V2 aluminum insert plate iterations" />
+<Figure src="telescopic-arm/spool-v1-v2.png" variant="plate" ratio="1/1" alt="Two pink spools: V1 marked with a red X and V2 with a green check, V2 has a larger chamfer" caption="Spool V1 → V2: larger chamfer, integrated spacer, stronger tie-off points" />
+</Grid>
+
+### Stress testing
+
+To check that the new inserts actually helped, we cycled the arm over and over and counted failures.
+
+| | V1 inserts | V2 inserts |
+|---|---|---|
+| Cycles run | 412 | 905 |
+| Failures | 11 | **1** |
+| Success rate | 97.33% | **99.89%** |
+| Slop at full extension | 31 mm | **5 mm** |
+
+## Control
+
+### The problem
+
+Because the arm both pivots and extends, its **center of mass and moment of inertia change constantly**. A PID loop tuned for a short arm oscillates when the arm is long, and one tuned for a long arm is sluggish when it's short. With a single fixed PID, our cycles were unstable.
+
+### Gain-scheduled feedforward
+
+My fix was to **predict the load before correcting for error**. Using the pivot's absolute encoder (angle θ) and the extension motor's encoder (extension D), the controller computes the torque needed to hold the arm still in its current pose and feeds that in directly. PID then only has to clean up small errors.
+
+<GainScheduleDiagram />
+
+I derived the pivot torque with a calculus-based model of the arm's mass distribution. The center of mass moves out linearly with extension, so the gravity torque about the pivot is:
+
+<Tex block label="Pivot" expr="x_{cm} = \frac{\int x\,dm}{M} = \frac{\alpha D}{M} \quad\Longrightarrow\quad \tau_{\text{pivot}}(\theta, D) = x_{cm}\,Mg\cos\theta = \alpha D g \cos\theta" />
+
+The extension is simpler because the moving mass is constant; only the component of gravity along the arm matters:
+
+<Tex block label="Extension" expr="\tau_{\text{ext}}(\theta) = r\,m g \sin\theta" />
+
+Here θ is the arm angle above horizontal, D the extension, r the spool radius, and α a constant fitted to the arm's mass distribution. The pivot power is **scaled in real time** from these formulas, so the arm holds steady and moves the same way whether it's retracted or fully extended.
+
+<Callout title="Result">
+
+With feedforward carrying the gravity load, the PID loop only has to correct small errors, so the arm behaves the same at every angle and extension. The arm reaches **full extension in 0.4 s** and pivots **90° in 0.25 s**.
+
+</Callout>
+
+## Build
+
+The build combined laser-cut pocketed aluminum tubing, aluminum insert plates and a lot of 3D-printed parts, all held to the tolerances above. Stringing a four-stage cascade is its own puzzle: each stage's string has to be routed and tied off so every tube extends and retracts in sync.
+
+<Grid cols={2} align="center">
+<Figure src="telescopic-arm/arm-photo.jpg" ratio="4/3" alt="Photo of a pocketed aluminum arm stage with pink 3D-printed outside bearing insert, lying on a speckled floor" caption="A built stage with its outside bearing insert" />
+<Video id="D64In4TDJXU" title="Telescopic arm assembly" vertical caption="Assembly of the telescopic arm" />
+</Grid>

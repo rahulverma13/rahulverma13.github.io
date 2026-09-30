@@ -1,0 +1,121 @@
+---
+import { Image } from 'astro:assets';
+import type { CollectionEntry } from 'astro:content';
+
+interface Props { project: CollectionEntry<'projects'>; index: number }
+const { project, index } = Astro.props;
+const d = project.data;
+const num = String(index + 1).padStart(2, '0');
+const img = d.cover ?? d.hero;
+const alt = d.coverAlt ?? d.heroAlt;
+const style = d.coverStyle ?? d.heroStyle;
+const flip = index % 2 === 1;
+---
+<a class:list={['tab reveal', { 'tab--flip': flip }]} href={`/projects/${project.id}/`} data-spotlight>
+  <div class="tab__body">
+    <div class="tab__top">
+      <span class="tab__num" aria-hidden="true">{num}</span>
+      <span class="tab__badge">{d.roleBadge}</span>
+    </div>
+    <p class="tab__kicker">PRJ-{num} · {d.subtitle}</p>
+    <h3 class="tab__title">{d.title}</h3>
+    <p class="tab__summary">{d.summary}</p>
+
+    {d.highlights.length > 0 && (
+      <dl class="tab__stats">
+        {d.highlights.slice(0, 3).map((h) => (
+          <div>
+            <dt>{h.label}</dt>
+            <dd>{h.value}</dd>
+          </div>
+        ))}
+      </dl>
+    )}
+
+    <div class="tab__domains" aria-label="Engineering domains">
+      {d.domains.map((dom) => <span class="domain"><i></i>{dom}</span>)}
+    </div>
+    <span class="tab__cta">
+      View project
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+    </span>
+  </div>
+  <div class:list={['tab__media frame', `frame--${style}`]}>
+    <Image src={img} alt={alt} widths={[560, 900, 1300]} sizes="(max-width: 900px) 100vw, 620px" />
+  </div>
+</a>
+
+<style>
+  .tab {
+    --mx: 50%;
+    --my: 50%;
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr 1.15fr;
+    gap: clamp(24px, 4vw, 56px);
+    align-items: center;
+    padding: clamp(22px, 3.2vw, 40px);
+    border-radius: 24px;
+    border: 1px solid var(--line);
+    background:
+      radial-gradient(600px circle at var(--mx) var(--my), rgba(168, 85, 247, 0.12), transparent 45%),
+      linear-gradient(180deg, var(--panel), var(--bg-2));
+    color: var(--text);
+    text-decoration: none;
+    overflow: hidden;
+    transition: border-color 0.35s, transform 0.5s var(--ease), box-shadow 0.4s;
+  }
+  .tab:hover { border-color: var(--line-strong); box-shadow: 0 30px 80px -40px rgba(124, 58, 237, 0.6); color: var(--text); }
+  .tab--flip { grid-template-columns: 1.15fr 1fr; }
+  .tab--flip .tab__body { order: 2; }
+
+  .tab__top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+  .tab__num {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(3.4rem, 6vw, 5rem);
+    line-height: 0.9;
+    color: transparent;
+    -webkit-text-stroke: 1.5px var(--accent);
+    transition: color 0.4s;
+  }
+  .tab:hover .tab__num { color: rgba(168, 85, 247, 0.22); }
+  .tab__badge {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    color: #fff;
+    padding: 7px 12px;
+    border-radius: 999px;
+    background: rgba(168, 85, 247, 0.16);
+    border: 1px solid rgba(199, 155, 255, 0.35);
+    text-align: right;
+  }
+  .tab__kicker { font-family: var(--font-mono); font-size: 0.78rem; letter-spacing: 0.08em; color: var(--accent-2); margin-bottom: 8px; text-transform: uppercase; }
+  .tab__title { font-size: clamp(2rem, 4vw, 3.1rem); margin-bottom: 14px; }
+  .tab__summary { color: var(--text-2); margin-bottom: 20px; }
+
+  .tab__stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 0 0 22px; }
+  .tab__stats div { border-left: 2px solid var(--accent); padding: 2px 0 2px 12px; }
+  .tab__stats dt { font-size: 0.74rem; color: var(--muted); line-height: 1.35; }
+  .tab__stats dd { margin: 0 0 2px; font-family: var(--font-display); font-weight: 700; font-size: 1.3rem; color: #fff; }
+  .tab__stats div { display: flex; flex-direction: column-reverse; justify-content: flex-end; }
+
+  .tab__domains { display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 24px; }
+  .tab__cta { display: inline-flex; align-items: center; gap: 10px; font-family: var(--font-mono); font-size: 0.86rem; color: var(--accent-2); }
+  .tab__cta svg { width: 18px; height: 18px; transition: transform 0.3s var(--ease); }
+  .tab:hover .tab__cta svg { transform: translateX(6px); }
+
+  .tab__media { aspect-ratio: 4 / 3; border-radius: 18px; }
+  .tab__media :global(img) { transition: transform 0.8s var(--ease); }
+  .tab:hover .tab__media :global(img) { transform: scale(1.04); }
+
+  @media (max-width: 900px) {
+    .tab, .tab--flip { grid-template-columns: 1fr; }
+    .tab--flip .tab__body { order: 0; }
+    .tab__media { order: -1; }
+  }
+  @media (max-width: 520px) {
+    .tab__stats { grid-template-columns: 1fr 1fr; }
+  }
+</style>
