@@ -29,7 +29,7 @@ links:
 
 Supercomputers like SDSC's **Expanse** give researchers thousands of CPU cores and racks of GPUs, but more hardware doesn't automatically mean faster results. Ask for too few cores and a job crawls; ask for too many and the extra hardware sits idle while it burns the allocation. And every model behaves differently on every chip.
 
-Over two summers our team built **benchmarking tools that answer those questions with data**. You give them an ML workload and they run it systematically across different hardware configurations, record performance, and show where the real speed-up is. It's software for getting the most out of hardware. Our benchmarking-workflow poster was featured on the ICICLE research organization's website, and the workflow is now used across the center.
+Over two summers our team built **benchmarking tools that answer those questions with data**. You give them an ML workload and they run it systematically across CPU core counts and GPU architectures, record performance, and show where the real speed-up is. The work sits right at the hardware-software boundary: how a PyTorch or TensorFlow job maps onto cores, memory and GPUs, and how scheduling choices in software decide how much of that silicon actually gets used. Our benchmarking-workflow poster was featured on the ICICLE research organization's website, and the workflow is now used across the center.
 
 <Stats items={[
   { value: "300K+", label: "Images in our custom SDSC-10 training dataset" },
@@ -38,11 +38,6 @@ Over two summers our team built **benchmarking tools that answer those questions
   { value: "2.3×", label: "A100 throughput over V100 on 3D-UNet" }
 ]} />
 
-<Callout title="Why this belongs in a hardware portfolio">
-
-This is where my mechanical and electrical work meets software. Benchmarking is about the **hardware-software boundary**: how a PyTorch or TensorFlow job actually maps onto CPU cores, memory and GPU architectures, and how scheduling choices in software decide how much of that silicon gets used.
-
-</Callout>
 
 ## 2024: PRISM
 
@@ -66,15 +61,15 @@ This is where my mechanical and electrical work meets software. Benchmarking is 
 Adding cores sped training up quickly at first, but the gains **flattened past 32 cores** while efficiency kept falling, for both frameworks. TensorFlow scaled more efficiently, durations were similar for both, and the **GPU beat every CPU configuration** by a wide margin.
 
 <Grid cols={2}>
-<Figure src="ucsd-research/pt-speedup.png" variant="plate" alt="PyTorch speedup versus cores: rises from 1 to about 8.5 at 48 cores then flattens" caption="PyTorch: speed-up vs. cores" />
-<Figure src="ucsd-research/tf-speedup.png" variant="plate" alt="TensorFlow speedup versus cores: rises to about 10.5 at 32 cores then flattens" caption="TensorFlow: speed-up vs. cores" />
-<Figure src="ucsd-research/pt-efficiency.png" variant="plate" alt="PyTorch normalized efficiency versus cores: falls from 100 to about 13 at 64 cores" caption="PyTorch: efficiency vs. cores" />
-<Figure src="ucsd-research/tf-efficiency.png" variant="plate" alt="TensorFlow normalized efficiency versus cores: falls from 100 to about 15 at 64 cores" caption="TensorFlow: efficiency vs. cores" />
+<Figure src="ucsd-research/pt-speedup.png" variant="rounded" alt="PyTorch speedup versus cores: rises from 1 to about 8.5 at 48 cores then flattens" caption="PyTorch: speed-up vs. cores" />
+<Figure src="ucsd-research/tf-speedup.png" variant="rounded" alt="TensorFlow speedup versus cores: rises to about 10.5 at 32 cores then flattens" caption="TensorFlow: speed-up vs. cores" />
+<Figure src="ucsd-research/pt-efficiency.png" variant="rounded" alt="PyTorch normalized efficiency versus cores: falls from 100 to about 13 at 64 cores" caption="PyTorch: efficiency vs. cores" />
+<Figure src="ucsd-research/tf-efficiency.png" variant="rounded" alt="TensorFlow normalized efficiency versus cores: falls from 100 to about 15 at 64 cores" caption="TensorFlow: efficiency vs. cores" />
 </Grid>
 
 <Grid cols={2}>
-<Figure src="ucsd-research/pt-cpu-gpu.png" variant="plate" alt="Box plot of PyTorch benchmark time across CPU core counts and GPU; time falls steeply with cores and GPU is lowest" caption="PyTorch: run time by CPU count vs. GPU" />
-<Figure src="ucsd-research/tf-cpu-gpu.png" variant="plate" alt="Box plot of TensorFlow benchmark time across CPU core counts and GPU; GPU is lowest" caption="TensorFlow: run time by CPU count vs. GPU" />
+<Figure src="ucsd-research/pt-cpu-gpu.png" variant="rounded" alt="Box plot of PyTorch benchmark time across CPU core counts and GPU; time falls steeply with cores and GPU is lowest" caption="PyTorch: run time by CPU count vs. GPU" />
+<Figure src="ucsd-research/tf-cpu-gpu.png" variant="rounded" alt="Box plot of TensorFlow benchmark time across CPU core counts and GPU; GPU is lowest" caption="TensorFlow: run time by CPU count vs. GPU" />
 </Grid>
 
 ### Impact

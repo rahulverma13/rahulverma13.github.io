@@ -20,17 +20,14 @@ const slides = projects.map((p, i) => ({
 const domains = [
   {
     key: 'Mechanical',
-    code: 'MECH',
     text: 'Coaxial swerve modules, tight-tolerance telescoping tubes, suspension and power transmission, all designed in CAD and built with CNC, laser-cut aluminum and 3D printing.',
   },
   {
     key: 'Electrical',
-    code: 'ELEC',
     text: 'Motors, servos, absolute encoders, accelerometers and control hubs integrated into working robots. Now moving down to the board level with PCB design.',
   },
   {
     key: 'Software',
-    code: 'SOFT',
     text: 'Kinematics, gain-scheduled feedforward and nonlinear velocity control for robots, plus Python and Bash tooling that benchmarks ML models on a supercomputer.',
   },
 ];
@@ -84,7 +81,6 @@ const domains = [
       <div class="domains__grid">
         {domains.map((d, i) => (
           <article class={`domains__card reveal reveal-delay-${i + 1}`}>
-            <span class="domains__code">{d.code}</span>
             <h3>{d.key}</h3>
             <p>{d.text}</p>
           </article>
@@ -128,22 +124,9 @@ const domains = [
         </dl>
       </div>
 
-      <div class="bom reveal">
-        <div class="bom__row bom__row--head" aria-hidden="true">
-          <span>Ref</span><span>Category</span><span>Tools &amp; skills</span>
-        </div>
-        {about.skills.map((s: { category: string; items: string[] }, i: number) => (
-          <div class="bom__row">
-            <span class="bom__ref">S{i + 1}</span>
-            <span class="bom__cat">{s.category}</span>
-            <span class="chip-row">{s.items.map((it) => <span class="chip">{it}</span>)}</span>
-          </div>
-        ))}
-        <div class="bom__row">
-          <span class="bom__ref">C1</span>
-          <span class="bom__cat">Coursework</span>
-          <ul class="bom__list">{about.coursework.map((c: string) => <li>{c}</li>)}</ul>
-        </div>
+      <div class="coursework reveal">
+        <span class="coursework__label">Coursework</span>
+        <ul class="chip-row">{site.coursework.map((c: string) => <li class="chip">{c}</li>)}</ul>
       </div>
     </div>
   </section>
@@ -188,8 +171,7 @@ const domains = [
   .domains__grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: clamp(40px, 6vw, 72px); }
   .domains__card { position: relative; padding: 26px 24px 22px; border-radius: var(--radius); border: 1px solid var(--line); background: linear-gradient(160deg, var(--panel-2), var(--bg-2)); overflow: hidden; }
   .domains__card::after { content: ''; position: absolute; top: 0; left: 24px; width: 48px; height: 3px; background: var(--accent); box-shadow: 0 0 18px var(--accent); }
-  .domains__code { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.16em; color: var(--accent-2); }
-  .domains__card h3 { margin: 10px 0 10px; font-size: 1.5rem; }
+  .domains__card h3 { margin: 6px 0 10px; font-size: 1.5rem; }
   .domains__card p { color: var(--text-2); font-size: 0.97rem; margin: 0; }
 
   /* ---------- section heads ---------- */
@@ -203,19 +185,16 @@ const domains = [
   /* ---------- about ---------- */
   .about { padding-top: clamp(90px, 12vw, 150px); }
   .about .section-head h2 { font-size: clamp(2rem, 4.4vw, 3.2rem); }
-  .about__grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: clamp(28px, 5vw, 64px); align-items: start; }
+  .about__grid { display: grid; grid-template-columns: 1.25fr 1fr; gap: clamp(28px, 5vw, 64px); align-items: center; }
   .about__text :global(p) { color: var(--text-2); font-size: 1.06rem; }
   .about__stats { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 0; }
-  .about__stats div { display: flex; flex-direction: column-reverse; justify-content: flex-end; padding: 18px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); }
+  .about__stats div { display: flex; flex-direction: column-reverse; justify-content: flex-end; padding: 20px 18px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); }
   .about__stats dd { margin: 0 0 6px; font-family: var(--font-display); font-weight: 700; font-size: 1.5rem; color: #fff; }
   .about__stats dt { font-size: 0.84rem; color: var(--muted); line-height: 1.4; }
 
-  .bom { margin-top: clamp(40px, 6vw, 64px); border: 1px solid var(--line-strong); border-radius: var(--radius); overflow: hidden; background: rgba(18, 14, 28, 0.6); }
-  .bom__row { display: grid; grid-template-columns: 70px 160px 1fr; gap: 16px; align-items: start; padding: 18px 22px; border-top: 1px dashed var(--line); }
-  .bom__row--head { border-top: 0; font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); background: rgba(168, 85, 247, 0.08); padding-block: 12px; }
-  .bom__ref { font-family: var(--font-mono); color: var(--accent-2); font-size: 0.85rem; padding-top: 4px; }
-  .bom__cat { font-family: var(--font-display); font-weight: 600; font-size: 1.1rem; }
-  .bom__list { margin: 0; padding-left: 18px; color: var(--text-2); }
+  .coursework { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; margin-top: clamp(28px, 4vw, 40px); padding: 16px 20px; border: 1px dashed var(--line-strong); border-radius: 14px; }
+  .coursework__label { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent-2); }
+  .coursework ul { list-style: none; margin: 0; padding: 0; }
 
   @media (max-width: 960px) {
     .hero__grid { grid-template-columns: 1fr; }
@@ -223,9 +202,6 @@ const domains = [
   }
   @media (max-width: 760px) {
     .domains__grid { grid-template-columns: 1fr; }
-    .bom__row { grid-template-columns: 44px 1fr; }
-    .bom__row > :last-child { grid-column: 1 / -1; }
-    .bom__row--head { display: none; }
   }
   @media (max-width: 560px) {
     .hero__spec { grid-template-columns: 1fr 1fr; }

@@ -26,6 +26,8 @@ const projects = defineCollection({
         tools: z.string().optional(),
       }),
       award: z.string().optional(),
+      // Optional jump link under the summary, e.g. { text: 'See the math below', href: '#the-math' }
+      pointer: z.object({ text: z.string(), href: z.string() }).optional(),
       hero: image(),
       heroAlt: z.string(),
       // 'plate' puts transparent CAD renders on a light drafting panel; 'photo' fills the frame; 'dark' for dark artwork

@@ -1,0 +1,248 @@
+---
+// Interactive model of the telescopic arm's gain-scheduled feedforward.
+// Drag the arm tip (or use the sliders) to pivot and extend it. The four stages
+// extend together (cascade), the center of mass moves, and the gravity load the
+// feedforward must cancel is recomputed live.
+const P = { x: 70, y: 366 };      // pivot
+const LEN = 140;                  // length of each tube stage (px)
+const STEP = 70;                  // max travel of each stage (px)
+const WIDTH = [34, 27, 20, 13];    // tube widths, outer → inner
+const MASS = [4, 3, 2, 1];        // relative stage masses (outer tube heaviest)
+const INIT = { theta: 35, ext: 60 };
+---
+<figure class="ax reveal" data-arm
+  data-px={P.x} data-py={P.y} data-len={LEN} data-step={STEP}
+  data-width={JSON.stringify(WIDTH)} data-mass={JSON.stringify(MASS)}>
+  <div class="ax__head">
+    <p class="ax__kicker">Interactive · drag the arm</p>
+    <p class="ax__title">Pivot and extend the arm, watch the load the controller has to cancel</p>
+  </div>
+
+  <div class="ax__body">
+    <svg class="ax__svg" viewBox="0 0 520 390" role="img" aria-labelledby="ax-desc" data-svg>
+      <desc id="ax-desc">Side view of the four-stage telescopic arm on its pivot. The center of mass, the gravity force and its two components, and the holding torque update as the arm angle and extension change.</desc>
+      <defs>
+        <pattern id="ax-grid" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M20 0H0V20" fill="none" stroke="rgba(176,140,255,.1)" /></pattern>
+        <marker id="ax-w" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#fff" /></marker>
+        <marker id="ax-p" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#c084fc" /></marker>
+        <marker id="ax-t" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#5eead4" /></marker>
+      </defs>
+      <rect width="520" height="390" fill="url(#ax-grid)" />
+      <line x1="20" y1={P.y} x2="510" y2={P.y} stroke="rgba(255,255,255,.22)" stroke-dasharray="4 6" />
+      <text x="500" y={P.y - 8} text-anchor="end" class="ax__small">horizontal</text>
+
+      <!-- torque arc around pivot (size ∝ holding torque) -->
+      <path data-torque fill="none" stroke="#c084fc" stroke-width="3" stroke-linecap="round" marker-end="url(#ax-p)" />
+
+      <!-- the arm: rotated group, stages drawn along +x -->
+      <g data-arm-g>
+        {[0, 1, 2, 3].map((k) => (
+          <g data-stage={k}>
+            <rect x="0" y={-WIDTH[k] / 2} width={LEN} height={WIDTH[k]} rx="3"
+              fill={['#2d2346', '#3a2d5c', '#4a3a75', '#5c4892'][k]} stroke={['#8f76c9', '#9f86da', '#b39cf0', '#c7b3ff'][k]} stroke-width="1.2" />
+            <rect x={LEN - 8} y={-WIDTH[k] / 2 - 3} width="10" height={WIDTH[k] + 6} rx="2" fill="#f0a6c4" opacity="0.9" />
+          </g>
+        ))}
+      </g>
+
+      <!-- theta arc -->
+      <path data-arc fill="none" stroke="rgba(255,255,255,.6)" stroke-width="1.5" />
+      <text data-theta-lbl class="ax__lbl">θ</text>
+
+      <!-- center of mass + forces -->
+      <line data-g x1="0" y1="0" x2="0" y2="0" stroke="#fff" stroke-width="2.5" marker-end="url(#ax-w)" />
+      <line data-gperp stroke="#c084fc" stroke-width="3" marker-end="url(#ax-p)" />
+      <line data-gpar stroke="#5eead4" stroke-width="3" stroke-dasharray="6 4" marker-end="url(#ax-t)" />
+      <g data-cm>
+        <circle r="9" fill="#0b0812" stroke="#fff" stroke-width="2" />
+        <path d="M-9,0 A9,9 0 0 1 0,-9 L0,0 Z M9,0 A9,9 0 0 1 0,9 L0,0 Z" fill="#fff" />
+      </g>
+      <text data-cm-lbl class="ax__cmlbl">center of mass</text>
+
+      <!-- pivot -->
+      <circle cx={P.x} cy={P.y} r="13" fill="#0d0a15" stroke="#fff" stroke-width="2" />
+      <circle cx={P.x} cy={P.y} r="3.5" fill="#fff" />
+
+      <!-- drag handle at tip -->
+      <g data-handle class="ax__handle" tabindex="-1">
+        <circle r="18" fill="rgba(168,85,247,.22)" stroke="#c084fc" stroke-width="1.5" stroke-dasharray="3 3" />
+        <circle r="5" fill="#fff" />
+      </g>
+    </svg>
+
+    <div class="ax__side">
+      <label class="ax__slider">
+        <span>Pivot angle θ <output data-out-theta>{INIT.theta}°</output></span>
+        <input type="range" min="0" max="90" step="1" value={INIT.theta} data-theta />
+      </label>
+      <label class="ax__slider">
+        <span>Extension <output data-out-ext>{INIT.ext}%</output></span>
+        <input type="range" min="0" max="100" step="1" value={INIT.ext} data-ext />
+      </label>
+
+      <dl class="ax__read" aria-live="polite">
+        <div>
+          <dt><i style="background:#c084fc"></i>Pivot holding torque</dt>
+          <dd><span data-out-tau>0</span>% of max</dd>
+          <div class="ax__bar"><span data-bar-tau style="background:#c084fc"></span></div>
+        </div>
+        <div>
+          <dt><i style="background:#5eead4"></i>Extension holding force</dt>
+          <dd><span data-out-fext>0</span>% of weight</dd>
+          <div class="ax__bar"><span data-bar-fext style="background:#5eead4"></span></div>
+        </div>
+        <div>
+          <dt><i style="background:#fff"></i>Center of mass from pivot</dt>
+          <dd><span data-out-cm>0</span>% of max reach</dd>
+          <div class="ax__bar"><span data-bar-cm style="background:#fff"></span></div>
+        </div>
+      </dl>
+    </div>
+  </div>
+
+  <ul class="ax__legend">
+    <li><i style="background:#fff"></i>Gravity on the arm (Mg), acting at the center of mass</li>
+    <li><i style="background:#c084fc"></i>Component across the arm → torque the pivot motor must hold</li>
+    <li><i style="background:#5eead4"></i>Component along the arm → force the extension motor must hold</li>
+  </ul>
+</figure>
+
+<style>
+  .ax { margin: 32px 0; padding: clamp(16px, 3vw, 24px); border-radius: 20px; border: 1px solid var(--line-strong); background: linear-gradient(160deg, #150f24, #0b0812); box-shadow: 0 30px 80px -50px rgba(124, 58, 237, 0.8); }
+  .ax .ax__kicker { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent-2); margin: 0 0 4px; }
+  .ax .ax__title { font-family: var(--font-display); font-weight: 600; font-size: 1.15rem; color: #fff; margin: 0 0 16px; }
+  .ax__body { display: grid; gap: 18px; }
+  .ax__side { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 22px; }
+  .ax__read { grid-column: 1 / -1; grid-template-columns: repeat(3, 1fr); }
+  .ax__svg { width: 100%; border-radius: 14px; border: 1px solid var(--line); background: #0a0711; touch-action: none; user-select: none; }
+  .ax__handle { cursor: grab; }
+  .ax__handle:active { cursor: grabbing; }
+  .ax__lbl { font-family: var(--font-display); font-weight: 700; font-size: 15px; fill: #fff; }
+  .ax__cmlbl { font-family: var(--font-mono); font-size: 12px; fill: #fff; paint-order: stroke; stroke: #0a0711; stroke-width: 4px; }
+  .ax__small { font-family: var(--font-mono); font-size: 10.5px; fill: var(--muted); }
+  .ax__slider { display: grid; gap: 4px; font-family: var(--font-mono); font-size: 0.84rem; color: var(--text-2); margin-bottom: 6px; }
+  .ax__slider output { color: #fff; font-weight: 700; margin-left: 6px; }
+  input[type='range'] { width: 100%; height: 40px; accent-color: var(--accent); cursor: pointer; background: transparent; }
+  .ax__read { display: grid; gap: 10px; margin: 10px 0 0; }
+  .ax__read > div { padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line); background: rgba(255, 255, 255, 0.02); }
+  .ax__read dt { font-size: 0.8rem; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+  .ax__read dt i { width: 12px; height: 3px; border-radius: 2px; display: inline-block; }
+  .ax__read dd { margin: 2px 0 6px; font-size: 0.84rem; color: var(--text-2); }
+  .ax__read dd span { font-family: var(--font-display); font-weight: 700; font-size: 1.45rem; color: #fff; margin-right: 4px; }
+  .ax__bar { height: 5px; border-radius: 5px; background: rgba(255, 255, 255, 0.07); overflow: hidden; }
+  .ax__bar span { display: block; height: 100%; width: 0; transition: width 0.12s linear; }
+  .ax__legend { list-style: none; padding: 0; margin: 16px 0 0; display: grid; gap: 6px; font-size: 0.84rem; color: var(--text-2); }
+  .ax__legend i { display: inline-block; width: 14px; height: 4px; border-radius: 2px; margin-right: 8px; vertical-align: middle; }
+  @media (max-width: 720px) { .ax__side, .ax__read { grid-template-columns: 1fr; } }
+  .ax__legend li { font-size: inherit; color: inherit; margin: 0; line-height: 1.5; }
+</style>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-arm]').forEach((root) => {
+    const PX = Number(root.dataset.px), PY = Number(root.dataset.py);
+    const LEN = Number(root.dataset.len), STEP = Number(root.dataset.step);
+    const MASS: number[] = JSON.parse(root.dataset.mass || '[]');
+    const $ = <T extends Element>(s: string) => root.querySelector(s) as T;
+    const svg = $<SVGSVGElement>('[data-svg]');
+    const thetaIn = $<HTMLInputElement>('[data-theta]');
+    const extIn = $<HTMLInputElement>('[data-ext]');
+    const set = (el: Element, a: Record<string, string | number>) => Object.entries(a).forEach(([k, v]) => el.setAttribute(k, String(v)));
+    const M = MASS.reduce((a, b) => a + b, 0);
+    const G = 120; // pixel length of the gravity vector
+    const maxReach = 3 * STEP + LEN;
+    // x_cm when fully extended — used to normalize the torque readout
+    const xcm = (e: number) => MASS.reduce((s, m, k) => s + m * (k * e + LEN / 2), 0) / M;
+    const xcmMax = xcm(STEP);
+
+    const update = () => {
+      const deg = Number(thetaIn.value);
+      const ext = Number(extIn.value) / 100;
+      const t = (deg * Math.PI) / 180;
+      const e = ext * STEP;
+      const ux = Math.cos(t), uy = -Math.sin(t); // unit vector along the arm (SVG coords)
+
+      set($('[data-arm-g]'), { transform: `translate(${PX} ${PY}) rotate(${-deg})` });
+      // cascade: every stage slides out by the same amount relative to the one behind it
+      root.querySelectorAll<SVGGElement>('[data-stage]').forEach((g) => {
+        const k = Number(g.dataset.stage);
+        set(g, { transform: `translate(${k * e} 0)` });
+      });
+
+      const r = 46;
+      set($('[data-arc]'), { d: `M${PX + r},${PY} A${r},${r} 0 0 0 ${PX + r * ux},${PY + r * uy}` });
+      const lt = t / 2;
+      set($('[data-theta-lbl]'), { x: PX + (r + 12) * Math.cos(lt) + 2, y: PY - (r + 12) * Math.sin(lt) + 5 });
+
+      const d = xcm(e);
+      const cx = PX + d * ux, cy = PY + d * uy;
+      set($('[data-cm]'), { transform: `translate(${cx} ${cy})` });
+      set($('[data-cm-lbl]'), { x: cx - 34 * Math.sin(t), y: cy - 34 * Math.cos(t) - 4, 'text-anchor': 'middle' });
+      set($('[data-g]'), { x1: cx, y1: cy, x2: cx, y2: cy + G });
+      // decompose gravity (0, +G) into along-arm and across-arm parts
+      const par = G * Math.sin(t);       // along arm, pointing back toward the pivot
+      const perp = G * Math.cos(t);      // across arm
+      set($('[data-gpar]'), { x1: cx, y1: cy, x2: cx - par * ux, y2: cy - par * uy, visibility: par < 4 ? 'hidden' : 'visible' });
+      // perpendicular (clockwise normal of the arm direction, pointing "down" off the arm)
+      const nx = -uy, ny = ux;
+      const sgn = ny > 0 || (ny === 0 && nx > 0) ? 1 : -1;
+      set($('[data-gperp]'), { x1: cx, y1: cy, x2: cx + sgn * nx * perp, y2: cy + sgn * ny * perp, visibility: perp < 4 ? 'hidden' : 'visible' });
+
+      // holding torque about the pivot ∝ x_cm · M g · cos θ
+      const tau = (d * Math.cos(t)) / xcmMax;
+      const fext = Math.sin(t);
+      const sweep = 40 + 240 * tau; // degrees of arc drawn around the pivot
+      const R = 26, a0 = Math.PI * 0.95, a1 = a0 - (sweep * Math.PI) / 180;
+      const p0 = { x: PX + R * Math.cos(a0), y: PY - R * Math.sin(a0) };
+      const p1 = { x: PX + R * Math.cos(a1), y: PY - R * Math.sin(a1) };
+      set($('[data-torque]'), { d: `M${p0.x},${p0.y} A${R},${R} 0 ${sweep > 180 ? 1 : 0} 1 ${p1.x},${p1.y}`, 'stroke-width': 2 + 3 * tau, opacity: 0.35 + 0.65 * tau });
+
+      const tip = 3 * e + LEN;
+      set($('[data-handle]'), { transform: `translate(${PX + tip * ux} ${PY + tip * uy})` });
+
+      $('[data-out-theta]').textContent = `${deg}°`;
+      $('[data-out-ext]').textContent = `${Math.round(ext * 100)}%`;
+      $('[data-out-tau]').textContent = String(Math.round(tau * 100));
+      $('[data-out-fext]').textContent = String(Math.round(fext * 100));
+      $('[data-out-cm]').textContent = String(Math.round((d / maxReach) * 100));
+      ($('[data-bar-tau]') as HTMLElement).style.width = `${tau * 100}%`;
+      ($('[data-bar-fext]') as HTMLElement).style.width = `${fext * 100}%`;
+      ($('[data-bar-cm]') as HTMLElement).style.width = `${(d / maxReach) * 100}%`;
+    };
+
+    // drag the tip: angle from the pointer direction, extension from its distance
+    let dragging = false;
+    const toSvg = (ev: PointerEvent) => {
+      const pt = svg.createSVGPoint();
+      pt.x = ev.clientX;
+      pt.y = ev.clientY;
+      const m = svg.getScreenCTM();
+      return m ? pt.matrixTransform(m.inverse()) : pt;
+    };
+    const drag = (ev: PointerEvent) => {
+      const p = toSvg(ev);
+      const dx = p.x - PX, dy = PY - p.y;
+      const deg = Math.max(0, Math.min(90, (Math.atan2(dy, dx) * 180) / Math.PI));
+      const dist = Math.hypot(dx, dy);
+      const ext = Math.max(0, Math.min(1, (dist - LEN) / (3 * STEP)));
+      thetaIn.value = String(Math.round(deg));
+      extIn.value = String(Math.round(ext * 100));
+      update();
+    };
+    const handle = $('[data-handle]');
+    handle.addEventListener('pointerdown', (ev) => {
+      dragging = true;
+      (ev.target as Element).setPointerCapture?.((ev as PointerEvent).pointerId);
+      drag(ev as PointerEvent);
+    });
+    svg.addEventListener('pointerdown', (ev) => {
+      if (dragging) return;
+      dragging = true;
+      drag(ev);
+    });
+    window.addEventListener('pointermove', (ev) => dragging && drag(ev));
+    window.addEventListener('pointerup', () => (dragging = false));
+    thetaIn.addEventListener('input', update);
+    extIn.addEventListener('input', update);
+    update();
+  });
+</script>

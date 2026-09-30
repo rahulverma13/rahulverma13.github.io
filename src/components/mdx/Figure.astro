@@ -6,16 +6,17 @@ interface Props {
   src: string;            // "<project>/<file>", e.g. "swomni/pod-cad.png"
   alt: string;
   caption?: string;
-  variant?: 'plate' | 'photo' | 'dark' | 'glow' | 'plain';
+  variant?: 'plate' | 'photo' | 'dark' | 'glow' | 'plain' | 'rounded';  // rounded = image only, corners rounded, no background
+  bleed?: 'top' | 'bottom' | 'both';   // for renders cut off at an edge: let them touch the frame edge
   ratio?: string;         // e.g. "4/3"; leave empty to use the image's own shape
   zoom?: boolean;         // click to open full size (default true)
   maxHeight?: string;     // e.g. "520px" for tall images
 }
-const { src, alt, caption, variant = 'photo', ratio, zoom = true, maxHeight } = Astro.props;
+const { src, alt, caption, variant = 'photo', ratio, zoom = true, maxHeight, bleed } = Astro.props;
 const img = projectImage(src);
 const style = [ratio ? `aspect-ratio:${ratio}` : '', maxHeight ? `--mh:${maxHeight}` : ''].filter(Boolean).join(';');
 ---
-<figure class:list={['fig reveal', { 'fig--mh': !!maxHeight }]}>
+<figure class:list={['fig reveal', { 'fig--mh': !!maxHeight }, bleed && `fig--bleed-${bleed}`]}>
   <div class:list={['fig__frame frame', `frame--${variant}`, { 'fig__frame--ratio': !!ratio }]} style={style || undefined}>
     {zoom ? (
       <a href={img.src} data-lightbox data-caption={caption ?? alt} aria-label={`Open full size: ${alt}`}>
@@ -36,6 +37,10 @@ const style = [ratio ? `aspect-ratio:${ratio}` : '', maxHeight ? `--mh:${maxHeig
   .fig__frame--ratio :global(img) { height: 100%; }
   .frame--photo :global(img) { object-fit: cover; }
   .frame--plain { background: transparent; border: 0; }
+  .frame--rounded { background: transparent; border: 0; }
+  .frame--rounded :global(img) { border-radius: var(--radius); }
+  .fig--bleed-top .frame--plate :global(img), .fig--bleed-both .frame--plate :global(img) { padding-top: 0; }
+  .fig--bleed-bottom .frame--plate :global(img), .fig--bleed-both .frame--plate :global(img) { padding-bottom: 0; }
   .fig--mh .fig__frame :global(img) { max-height: var(--mh); object-fit: contain; }
   .fig--mh .frame--photo :global(img) { width: auto; margin: 0 auto; }
   figcaption { margin-top: 10px; font-size: 0.86rem; color: var(--muted); font-family: var(--font-mono); letter-spacing: 0.01em; }

@@ -1,0 +1,76 @@
+---
+// Swomni velocity + acceleration profile (redrawn from the logged run on the research poster).
+import data from '../../data/swomni-profile.json';
+interface Props { title: string; note?: string }
+const { title, note } = Astro.props;
+
+const W = 520, H = 330;
+const L = 46, R = 14;
+const iw = W - L - R;
+const top = { y: 34, h: 150, max: 11 };   // speed panel
+const bot = { y: 222, h: 70, max: 5.5 };  // acceleration panel
+const sx = (t: number) => L + t * iw;
+const syTop = (v: number) => top.y + top.h - (v / top.max) * top.h;
+const syBot = (v: number) => bot.y + bot.h - (v / bot.max) * bot.h;
+const line = (pts: number[][], sy: (v: number) => number) => pts.map(([t, v], i) => `${i ? 'L' : 'M'}${sx(t).toFixed(1)},${sy(v).toFixed(1)}`).join(' ');
+const dx = sx(data.divider);
+const COL = { theory: '#5eead4', measured: '#b57bff', accel: '#e9e1f7' };
+const last = (arr: number[][]) => arr[arr.length - 1];
+---
+<figure class="pc reveal">
+  <figcaption class="pc__title">{title}</figcaption>
+  <ul class="pc__legend">
+    <li><i style={`background:${COL.theory}`}></i>Theoretical max speed</li>
+    <li><i style={`background:${COL.measured}`}></i>Measured speed</li>
+    <li><i style={`background:${COL.accel}`}></i>Acceleration</li>
+  </ul>
+  <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Two-panel plot. Top: theoretical maximum speed stays near 5.5 during period 1, then climbs to about 10.4 as the CVT engages; measured speed rises quickly to about 5 in period 1, then slowly to about 6.2 in period 2. Bottom: acceleration spikes to about 5 in period 1 and stays near zero in period 2.">
+    <!-- period shading and divider -->
+    <rect x={L} y={top.y - 6} width={dx - L} height={bot.y + bot.h - top.y + 6} fill="rgba(255,255,255,.025)" />
+    <line x1={dx} x2={dx} y1={top.y - 12} y2={bot.y + bot.h} stroke="rgba(255,255,255,.55)" stroke-dasharray="5 5" />
+    <text x={(L + dx) / 2} y={top.y - 14} text-anchor="middle" class="pc__period">PERIOD 1</text>
+    <text x={(dx + W - R) / 2} y={top.y - 14} text-anchor="middle" class="pc__period">PERIOD 2 · CVT ENGAGED</text>
+
+    <!-- speed panel -->
+    {[0, 5, 10].map((v) => (
+      <g>
+        <line x1={L} x2={W - R} y1={syTop(v)} y2={syTop(v)} class="pc__grid" />
+        <text x={L - 8} y={syTop(v) + 4} text-anchor="end" class="pc__tick">{v}</text>
+      </g>
+    ))}
+    <text transform={`translate(12 ${top.y + top.h / 2}) rotate(-90)`} text-anchor="middle" class="pc__lab">Speed</text>
+    <path d={line(data.red, syTop)} fill="none" stroke={COL.theory} stroke-width="2.2" stroke-linejoin="round" />
+    <path d={line(data.green, syTop)} fill="none" stroke={COL.measured} stroke-width="2.5" stroke-linejoin="round" />
+    <text x={sx(last(data.red)[0]) - 4} y={syTop(last(data.red)[1]) + 16} text-anchor="end" class="pc__direct">theoretical max</text>
+    <text x={sx(last(data.green)[0]) - 4} y={syTop(last(data.green)[1]) + 18} text-anchor="end" class="pc__direct">measured</text>
+
+    <!-- acceleration panel -->
+    {[0, 5].map((v) => (
+      <g>
+        <line x1={L} x2={W - R} y1={syBot(v)} y2={syBot(v)} class="pc__grid" />
+        <text x={L - 8} y={syBot(v) + 4} text-anchor="end" class="pc__tick">{v}</text>
+      </g>
+    ))}
+    <text transform={`translate(12 ${bot.y + bot.h / 2}) rotate(-90)`} text-anchor="middle" class="pc__lab">Accel.</text>
+    <path d={line(data.blue, syBot)} fill="none" stroke={COL.accel} stroke-width="2" stroke-linejoin="round" />
+    <line x1={L} x2={W - R} y1={bot.y + bot.h} y2={bot.y + bot.h} class="pc__axis" />
+    <text x={L + iw / 2} y={H - 8} text-anchor="middle" class="pc__lab">Time through the run →</text>
+  </svg>
+  {note && <p class="pc__note">{note}</p>}
+</figure>
+
+<style>
+  .pc { margin: 0; padding: 18px 16px 14px; border-radius: 16px; border: 1px solid var(--line); background: linear-gradient(160deg, #130e1f, #0b0812); }
+  .pc__title { font-family: var(--font-display); font-weight: 600; font-size: 1rem; color: #fff; }
+  .pc__legend { list-style: none; padding: 0; margin: 8px 0 4px; display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 0.78rem; color: var(--text-2); }
+  .pc__legend i { display: inline-block; width: 14px; height: 3px; border-radius: 2px; margin-right: 7px; vertical-align: middle; }
+  svg { width: 100%; height: auto; overflow: visible; }
+  .pc__grid { stroke: rgba(176, 140, 255, 0.12); }
+  .pc__axis { stroke: rgba(176, 140, 255, 0.4); }
+  .pc__tick { font-family: var(--font-mono); font-size: 12px; fill: var(--muted); }
+  .pc__lab { font-family: var(--font-mono); font-size: 12px; fill: var(--text-2); }
+  .pc__period { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; fill: var(--accent-2); }
+  .pc__direct { font-family: var(--font-mono); font-size: 11.5px; fill: var(--text-2); }
+  .pc .pc__note { font-size: 0.82rem; color: var(--muted); margin: 6px 0 0; line-height: 1.5; }
+  .pc__legend li { font-size: inherit; color: inherit; margin: 0; line-height: 1.5; }
+</style>

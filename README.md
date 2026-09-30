@@ -13,11 +13,11 @@ You never need to touch the code to change content. Everything you'd want to edi
 
 | What you want to change | File to edit |
 |---|---|
-| Name, tagline, typing-animation words, email, LinkedIn, GitHub | `src/data/site.json` |
-| About section: bio, stat boxes, skills, coursework | `src/content/about.md` |
+| Name, tagline, typing-animation words, email, LinkedIn, coursework | `src/data/site.json` |
+| About section: bio and the four stat boxes | `src/content/about.md` |
 | A project page (text, facts, images, video) | `src/content/projects/<project>/index.mdx` |
 | A project's images | `src/content/projects/<project>/images/` |
-| Resume PDF | `public/resume.pdf` (remove your phone number first) |
+| Resume PDF | `public/resume.pdf` (replace the file, keep the name) |
 | Posters and other downloadable PDFs | `public/files/` |
 | Colors and fonts | the top of `src/styles/global.css` (the `:root` block) |
 
@@ -65,6 +65,7 @@ facts:                        # the Role / Timeline / Team / Tools strip (leave 
   tools: "..."
 hero: ./images/hero.png       # big image at the top of the page
 heroAlt: Describe the image for screen readers
+pointer: { text: "See the math below", href: "#the-math" }   # optional jump link under the summary
 heroStyle: plate              # plate = light drafting background (for CAD renders)
                               # photo = image fills the frame (for photos)
                               # dark / glow = dark backgrounds
@@ -78,6 +79,13 @@ Text in YAML that contains a colon (`:`) must be wrapped in quotes.
 
 ```mdx
 <Figure src="swomni/pod-cad.png" variant="plate" alt="What the image shows" caption="Caption under the image" />
+<!-- variant: plate (light grid, for CAD), photo, rounded (image only, rounded corners), dark, glow
+     bleed="top" / "bottom" / "both": for renders that are cut off at an edge -->
+
+<Grid template="minmax(0, 1fr) 232px">   <!-- text next to a narrow vertical video -->
+  <div>Text here</div>
+  <Video id="..." title="..." vertical width="232px" />
+</Grid>
 
 <Grid cols={2}>
   <Figure ... />
@@ -95,6 +103,10 @@ Text in YAML that contains a colon (`:`) must be wrapped in quotes.
 <PowerPath paths={[{ name: "Drive", steps: ["Motor", "Belt", "Wheel"] }]} />
 
 <Poster src="swomni/poster.jpg" pdf="/files/poster.pdf" title="Poster title" alt="..." />
+
+<LineChart title="..." xLabel="..." yLabel="..." points={[{ x: 0, y: 2.6 }, { x: 0.5, y: 2.4 }]} best="min" />
+
+<BarChart title="..." bars={[{ label: "A100", value: 2.28 }]} unit="×" />
 ```
 
 Image paths in `Figure` are written as `<project folder>/<file name>`.

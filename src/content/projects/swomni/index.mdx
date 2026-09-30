@@ -18,12 +18,10 @@ facts:
   timeline: "2024 – 2025 (Grade 11)"
   team: "Solo"
   tools: "CAD, FDM 3D printing, laser-cut 6061 aluminum, REV Expansion Hub, Java"
-hero: ./images/hero-render.png
-heroAlt: CAD render of the Swomni drivetrain with purple 3D-printed swerve pods, omni wheels and belt drives on an aluminum chassis plate
-heroStyle: plate
-cover: ./images/robot-cutout.png
-coverAlt: The finished Swomni robot with pink 3D-printed pods, belts and wiring on an aluminum chassis
-coverStyle: glow
+pointer: { text: "See The math below for how tilting the wheels adds speed", href: "#the-math" }
+hero: ./images/robot-cutout.png
+heroAlt: The finished Swomni robot with pink 3D-printed pods, belts and wiring on an aluminum chassis
+heroStyle: glow
 links:
   - { label: Research poster (PDF), href: /files/swomni-research-poster.pdf, kind: PDF }
   - { label: Demo video on YouTube, href: "https://youtube.com/shorts/MwDviS-xaNA", kind: Video }
@@ -31,7 +29,7 @@ links:
 
 ## Overview
 
-<Grid cols={2} align="start">
+<Grid template="minmax(0, 1fr) 232px" align="start">
 <div>
 
 **Swomni** (swerve + omni) is a drivetrain built from four independent pods. Each pod holds an **omni wheel**, a wheel with free-spinning rollers around its rim, and each pod can rotate about its vertical (yaw) axis to point in any direction.
@@ -41,7 +39,7 @@ That combination unlocks something a normal drivetrain can't do. When the robot 
 My project had two goals: **prove the effect on real hardware**, and then find the **control strategy** that uses it best over short distances.
 
 </div>
-<Video id="MwDviS-xaNA" title="Swomni drivetrain demo" vertical featured caption="Demo: the drivetrain driving and angling its pods" />
+<Video id="MwDviS-xaNA" title="Swomni drivetrain demo" vertical width="232px" caption="Demo video" />
 </Grid>
 
 <Stats items={[
@@ -65,8 +63,6 @@ Now let the wheel sit at an angle θ from the direction the robot is travelling.
 
 With θ = 0 the robot moves at the motor's normal speed ωr. As θ grows, cos θ shrinks and the achievable speed climbs; in theory it goes to infinity as θ approaches 90°. The four pods angle inward in mirror-image pairs, so their sideways components cancel and the robot still drives straight.
 
-<CvtExplorer />
-
 ### The catch: traction
 
 Speed isn't free. Each wheel pushes with force F along its own heading, and only the forward component of that push accelerates the robot:
@@ -79,9 +75,9 @@ Multiply force by speed and the angle cancels out, so the power delivered stays 
 
 Force and speed trade off against each other at constant power. That's the definition of a transmission, and since θ can take any value it's a *continuously variable* one: the effective gear ratio is simply **1 / cos θ**.
 
-<Figure src="swomni/cvt-figure.png" variant="plate" alt="Bottom views of the robot: wheels pointed straight give net force 4F and max velocity V; wheels angled give net force 4F cos theta and max velocity V over cos theta" caption="Wheels straight (left) vs. angled inward (right): force drops by cos θ, top speed rises by 1/cos θ" />
-
 The engineering question is therefore **when** to shift. Angle the wheels too early and the robot can't accelerate; too late and the run is almost over. Physical limits like roller friction and gear backlash cap the real speed-up well before the math does.
+
+<CvtExplorer />
 
 ## Mechanical design
 
@@ -164,13 +160,22 @@ I designed the robot in CAD, iterated on single pods by 3D printing and testing 
 
 In each trial the robot accelerated until it reached a set percentage of its no-CVT top speed, and then the software began angling the wheels. I swept that switch point from **0% to 100% in 10% steps**, ran **5 trials at each setting**, and timed runs over **12 ft and 18 ft**.
 
+### What the data shows
+
+- **The CVT effect is real.** As the wheels angled inward, the robot's top speed rose from **4.99 ft/s to 7.90 ft/s**, a **63% increase** over the motor's normal limit.
+- **There's a sweet spot.** Starting the shift between **40% and 60%** of top speed gave the best times at both distances. The 12 ft run dropped from 2.65 s to 2.40 s (**9.4% faster**) and the 18 ft run from 4.16 s to 3.64 s (**12.5% faster**). The best overall threshold was about **45%**.
+- **Two phases of motion.** The acceleration profiles show a fast first phase where the robot reaches its normal top speed, then a slower second phase where the CVT keeps adding speed. The shift works best right as the first phase ends, which is exactly why 40–60% wins.
+- **Top speed peaks around 81° of wheel angle** before roller friction takes over and speed falls off.
+
+<Grid cols={2} align="stretch">
 <LineChart
   title="12 ft run: average travel time"
-  xLabel="Speed at which the CVT starts"
+  xLabel="CVT start (% of top speed)"
   yLabel="Time (s)"
   xFormat="percent"
   yUnit=" s"
-  best
+  best="min"
+  bestLabel="fastest"
   band={{ from: 0.4, to: 0.6, label: "SWEET SPOT" }}
   points={[
     { x: 0, y: 2.64 }, { x: 0.1, y: 2.58 }, { x: 0.2, y: 2.52 }, { x: 0.3, y: 2.48 }, { x: 0.4, y: 2.40 },
@@ -179,28 +184,37 @@ In each trial the robot accelerated until it reached a set percentage of its no-
 />
 <LineChart
   title="18 ft run: average travel time"
-  xLabel="Speed at which the CVT starts"
+  xLabel="CVT start (% of top speed)"
   yLabel="Time (s)"
   xFormat="percent"
   yUnit=" s"
-  best
+  best="min"
+  bestLabel="fastest"
   band={{ from: 0.4, to: 0.6, label: "SWEET SPOT" }}
-  note="At 0–10% the wheels angled too early and the robot could not accelerate enough to finish (DNF)."
+  note="At 0–10% the wheels angled too early and the robot could not finish (DNF)."
   points={[
     { x: 0, y: null }, { x: 0.1, y: null }, { x: 0.2, y: 4.99 }, { x: 0.3, y: 4.22 }, { x: 0.4, y: 3.80 },
     { x: 0.5, y: 3.64 }, { x: 0.6, y: 3.76 }, { x: 0.7, y: 4.01 }, { x: 0.8, y: 4.23 }, { x: 0.9, y: 4.20 }, { x: 1, y: 4.16 }
   ]}
 />
-
-### What the data shows
-
-- **The CVT effect is real.** As the wheels angled inward, the robot's top speed rose from **4.99 ft/s to 7.90 ft/s**, a **63% increase** over the motor's normal limit.
-- **There's a sweet spot.** Starting the shift between **40% and 60%** of top speed gave the best times at both distances. The 12 ft run dropped from 2.65 s to 2.40 s (**9.4% faster**) and the 18 ft run from 4.16 s to 3.64 s (**12.5% faster**). The best overall threshold was about **45%**.
-- **Two phases of motion.** The acceleration profiles show a fast first phase where the robot reaches its normal top speed, then a slower second phase where the CVT keeps adding speed. The shift works best right as the first phase ends, which is exactly why 40–60% wins.
-- **Top speed peaks around 81° of wheel angle** before roller friction takes over and speed falls off.
-
-<Figure src="swomni/fig-velocity-angle.png" variant="plate" alt="Graph of maximum velocity reached versus final wheel angle, rising from about 4.7 ft/s at 0 degrees to about 7.5 ft/s near 81 degrees, then dropping sharply" caption="Max velocity vs. final wheel angle" />
-<Figure src="swomni/fig-accel-profile.png" variant="plate" alt="Velocity and acceleration profile: period 1 rapid acceleration to about 5 ft/s with no CVT, then period 2 slow increase to about 6 ft/s as the CVT engages; theoretical max speed rises above 10" caption="Acceleration profile showing the two phases of motion" />
+<LineChart
+  title="Top speed vs. final wheel angle"
+  xLabel="Final wheel angle"
+  yLabel="Max speed (ft/s)"
+  xSuffix="°"
+  yUnit=" ft/s"
+  xTicks={[0, 20, 40, 60, 80]}
+  yDomain={[4, 8]}
+  best="max"
+  bestLabel="peak"
+  note="Speed climbs with wheel angle until roller friction takes over past about 81°."
+  points={[
+    { x: 0, y: 4.74 }, { x: 33, y: 5.43 }, { x: 51, y: 6.20 }, { x: 60, y: 6.52 }, { x: 66, y: 6.77 },
+    { x: 72, y: 7.14 }, { x: 77, y: 7.34 }, { x: 81, y: 7.46 }, { x: 84, y: 7.10 }, { x: 89, y: 5.39 }
+  ]}
+/>
+<ProfileChart title="Speed and acceleration through one run" note="Period 1: the robot accelerates hard with wheels straight. Period 2: the CVT engages and speed keeps climbing slowly." />
+</Grid>
 
 ### Next steps
 

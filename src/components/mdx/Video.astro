@@ -1,14 +1,14 @@
 ---
 // YouTube embed. `id` is the part after "watch?v=" or "shorts/".
 // vertical: true for YouTube Shorts. start/end are in seconds.
-interface Props { id: string; title: string; vertical?: boolean; start?: number; end?: number; caption?: string; featured?: boolean }
-const { id, title, vertical = false, start, end, caption, featured = false } = Astro.props;
+interface Props { id: string; title: string; vertical?: boolean; start?: number; end?: number; caption?: string; featured?: boolean; width?: string }
+const { id, title, vertical = false, start, end, caption, featured = false, width } = Astro.props;
 const params = new URLSearchParams({ rel: '0', modestbranding: '1', playsinline: '1' });
 if (start) params.set('start', String(start));
 if (end) params.set('end', String(end));
 const src = `https://www.youtube-nocookie.com/embed/${id}?${params}`;
 ---
-<figure class:list={['video reveal', { 'video--vertical': vertical, 'video--featured': featured }]}>
+<figure class:list={['video reveal', { 'video--vertical': vertical, 'video--featured': featured }]} style={width ? `--vw:${width}` : undefined}>
   <div class="video__frame brackets">
     <iframe
       src={src}
@@ -24,9 +24,9 @@ const src = `https://www.youtube-nocookie.com/embed/${id}?${params}`;
 
 <style>
   .video { margin: 28px 0; }
+  :global(.grid) > .video { margin: 0; }
   .video__frame { position: relative; aspect-ratio: 16 / 9; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--line-strong); background: #000; box-shadow: 0 30px 80px -40px rgba(124, 58, 237, 0.6); }
-  .video--vertical .video__frame { aspect-ratio: 9 / 16; max-width: 340px; margin: 0 auto; }
-  .video--vertical.video--featured .video__frame { max-width: 380px; }
+  .video--vertical .video__frame { aspect-ratio: 9 / 16; max-width: var(--vw, 340px); margin: 0 auto; }
   iframe { width: 100%; height: 100%; border: 0; }
   figcaption { margin-top: 10px; font-size: 0.86rem; color: var(--muted); font-family: var(--font-mono); text-align: center; }
 </style>

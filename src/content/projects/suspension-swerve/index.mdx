@@ -19,9 +19,6 @@ facts:
 hero: ./images/hero-night.jpg
 heroAlt: Side view of the finished suspension swerve robot at night with a clear polycarbonate shell and green and blue underglow
 heroStyle: photo
-cover: ./images/cad-iso.png
-coverAlt: CAD render of the suspension swerve drivetrain with a transparent shell, four swerve modules and the team number 22105
-coverStyle: plate
 links:
   - { label: Demo video on YouTube, href: "https://www.youtube.com/watch?v=VUyIV2vnNWE&t=13s", kind: Video }
 ---
@@ -50,40 +47,50 @@ Every module has one motor to spin the wheel and one servo to steer it. The chal
 
 ## Power transmission
 
-The heart of this design is how power reaches the wheel. Both the motor and the servo are **mounted to the chassis and never move**, yet the module under them can spin endlessly and slide up and down. That's only possible because everything is **coaxial**, sharing the module's vertical axis.
-
-<PowerPath paths={[
-  { name: "Drive (spins the wheel)", steps: ["Motor", "Timing belt", "Central shaft", "Spur gear pair (planetary)", "Sliding bevel gear", "Wheel"], note: "The spur gears double as a planetary gearset, so the drive keeps working however the module is turned." },
-  { name: "Steer (turns the module)", steps: ["Servo", "Timing belt pulley", "Module ring", "Large bearing"], note: "The whole module rotates inside one large bearing, so steering has no end stops." },
-  { name: "Suspend (moves the wheel up and down)", steps: ["Bevel gear slip-fit on shaft", "4 × MGN7 linear rails", "3 compression springs"], note: "The bevel gear slides along its shaft, so drive power still reaches the wheel anywhere in its 2.5″ of travel." }
-]} />
-
-<Grid cols={2}>
-<Figure src="suspension-swerve/motor-geartrain.png" variant="plate" ratio="4/5" alt="CAD close-up of the motor drive path: motor, belt to a vertical shaft, down to the wheel through bevel gears, with other parts shown transparent" caption="Drive path: motor → belt → shaft → gears → wheel" />
-<Figure src="suspension-swerve/servo-geartrain.png" variant="plate" ratio="4/5" alt="CAD close-up of the steering path: servo with an orange gear driving the large module ring gear" caption="Steer path: the fixed servo turns the module ring" />
-</Grid>
-
-## Module design
+The heart of this design is how power reaches the wheel. Both the motor and the servo are **mounted to the chassis and never move**, yet the module under them can spin endlessly and slide up and down. That's only possible because everything is **coaxial**, sharing the module's vertical axis. Each module has three power paths:
 
 <Grid cols={2} align="center">
-<Figure src="suspension-swerve/pod-cad.png" variant="plate" ratio="3/4" alt="CAD render of a single module: large ring gear on top, four linear rails with springs around a central shaft, and the wheel below" caption="One module: ring gear, rails, springs and wheel" />
+<Figure src="suspension-swerve/motor-geartrain.png" variant="rounded" alt="CAD close-up of the motor drive path: motor, belt to a vertical shaft, down to the wheel through bevel gears, with other parts shown transparent" caption="Drive path, highlighted in CAD" />
 <div>
 
-### Suspension
+<PowerPath paths={[
+  { name: "Drive: spins the wheel", steps: ["Motor", "Timing belt", "Central shaft", "Spur gears", "Bevel gear", "Wheel"] }
+]} />
 
-- **Four MGN7 linear rails** constrain the wheel so it can only move vertically, with no rocking
-- **Three compression springs** carry the robot's weight and soak up bumps
-- A **sliding bevel gear**, slip-fit on its shaft, keeps the wheel powered through **2.5″ of travel**
-
-### Steering
-
-- The module turns inside **one large bearing**, driven by the servo through a belted pulley and gear
-- Because the motor and servo are fixed to the frame, the wheel can **rotate continuously** with no wires twisting
+The motor drives a timing belt to a central shaft, followed by a pair of spur gears. Those spur gears **double as a planetary gearset**, so the wheel keeps getting power however the module is turned. A bevel gear at the bottom turns the drive 90° into the wheel axle.
 
 </div>
 </Grid>
 
-<Figure src="suspension-swerve/module-pair-cad.png" variant="plate" alt="CAD of two modules on one side of the chassis with a transparent top plate, showing yellow motors, belts, gear rings and rails" caption="Two modules and their motors on one side of the chassis" />
+<Grid cols={2} align="center">
+<div>
+
+<PowerPath start={2} paths={[
+  { name: "Steer: turns the module", steps: ["Servo", "Timing belt pulley", "Module ring", "Large bearing"] }
+]} />
+
+The whole module is constrained inside **one large bearing** and turned by the servo through a belted pulley. Because the servo and motor stay fixed to the frame, the wheel can **rotate continuously** with no end stops and no wires twisting.
+
+</div>
+<Figure src="suspension-swerve/servo-geartrain.png" variant="rounded" alt="CAD close-up of the steering path: servo with an orange gear driving the large module ring gear" caption="Steer path, highlighted in CAD" />
+</Grid>
+
+<Grid cols={2} align="center">
+<Figure src="suspension-swerve/pod-cad.png" variant="plate" ratio="4/5" alt="CAD render of a single module: large ring gear on top, four linear rails with springs around a central shaft, and the wheel below" caption="One module: ring gear, rails, springs and wheel" />
+<div>
+
+<PowerPath start={3} paths={[
+  { name: "Suspend: lets the wheel ride up and down", steps: ["Sliding bevel gear", "4 × MGN7 rails", "3 springs"] }
+]} />
+
+- The second spur gear carries a **bevel gear that is slip-fit on its shaft**, so it slides up and down while still passing drive power to the wheel
+- **Four MGN7 linear rails** constrain the wheel so it can only move vertically, with no rocking
+- **Three compression springs** carry the robot's weight and soak up bumps, giving **2.5″ of travel**
+
+</div>
+</Grid>
+
+<Figure src="suspension-swerve/module-pair-cad.png" variant="rounded" alt="CAD of two modules on one side of the chassis with a transparent top plate, showing yellow motors, belts, gear rings and rails" caption="Two modules and their motors on one side of the chassis" />
 
 ## Electronics & software
 

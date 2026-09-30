@@ -1,10 +1,7 @@
 ---
 import site from '../data/site.json';
-const links = [
-  { href: '/#projects', label: 'Projects' },
-  { href: '/#about', label: 'About' },
-  { href: site.resume, label: 'Resume' },
-];
+import { getCollection } from 'astro:content';
+const projects = (await getCollection('projects', (p) => p.data.status === 'published')).sort((a, b) => a.data.order - b.data.order);
 ---
 <header class="nav" data-nav>
   <div class="container nav__inner">
@@ -19,7 +16,31 @@ const links = [
     </button>
 
     <nav id="nav-menu" class="nav__menu" aria-label="Main">
-      {links.map((l) => <a href={l.href} target={l.label === 'Resume' ? '_blank' : undefined} rel={l.label === 'Resume' ? 'noopener' : undefined}>{l.label}</a>)}
+      <div class="dd" data-dd>
+        <button class="dd__btn" type="button" aria-expanded="false" aria-controls="dd-projects" data-dd-btn>
+          Projects
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div class="dd__panel" id="dd-projects" data-dd-panel>
+          <a class="dd__all" href="/#projects">
+            <span>All projects</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+          </a>
+          <ul>
+            {projects.map((p, i) => (
+              <li>
+                <a href={`/projects/${p.id}/`}>
+                  <span class="dd__num">PRJ-{String(i + 1).padStart(2, '0')}</span>
+                  <span class="dd__title">{p.data.title}</span>
+                  <span class="dd__sub">{p.data.subtitle}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+      <a class="nav__link" href="/#about">About</a>
+      <a class="nav__link" href={site.resume} target="_blank" rel="noopener">Resume</a>
       <a class="btn btn--primary nav__cta" href="/#contact">Contact</a>
     </nav>
   </div>
@@ -54,7 +75,7 @@ const links = [
   }
   .nav__name { font-family: var(--font-display); font-weight: 600; font-size: 1.05rem; letter-spacing: -0.01em; }
   .nav__menu { display: flex; align-items: center; gap: 6px; }
-  .nav__menu a:not(.btn) {
+  .nav__link, .dd__btn {
     font-family: var(--font-mono);
     font-size: 0.85rem;
     color: var(--text-2);
@@ -63,9 +84,40 @@ const links = [
     border-radius: 8px;
     transition: color 0.2s, background 0.2s;
   }
-  .nav__menu a:not(.btn):hover { color: #fff; background: rgba(168, 85, 247, 0.1); }
+  .nav__link:hover, .dd__btn:hover, .dd__btn[aria-expanded='true'] { color: #fff; background: rgba(168, 85, 247, 0.1); }
   .nav__cta { margin-left: 8px; min-height: 42px; }
   .nav__toggle { display: none; }
+
+  /* projects dropdown */
+  .dd { position: relative; }
+  .dd__btn { display: inline-flex; align-items: center; gap: 6px; background: none; border: 0; cursor: pointer; }
+  .dd__btn svg { width: 14px; height: 14px; transition: transform 0.25s var(--ease); }
+  .dd__btn[aria-expanded='true'] svg { transform: rotate(180deg); }
+  .dd__panel {
+    position: absolute;
+    top: calc(100% + 10px);
+    left: 50%;
+    width: 360px;
+    padding: 10px;
+    border-radius: 16px;
+    border: 1px solid var(--line-strong);
+    background: #0d0a15;
+    box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(168, 85, 247, 0.05);
+    opacity: 0;
+    visibility: hidden;
+    transform: translate(-50%, -6px);
+    transition: opacity 0.2s, transform 0.2s var(--ease), visibility 0s linear 0.2s;
+  }
+  .dd.is-open .dd__panel { opacity: 1; visibility: visible; transform: translate(-50%, 0); transition: opacity 0.2s, transform 0.2s var(--ease); }
+  .dd__panel ul { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 2px; }
+  .dd__panel ul a { display: grid; grid-template-columns: auto 1fr; column-gap: 12px; padding: 10px 12px; border-radius: 10px; text-decoration: none; color: var(--text); }
+  .dd__panel ul a:hover, .dd__panel ul a:focus-visible { background: rgba(168, 85, 247, 0.12); }
+  .dd__num { grid-row: span 2; font-family: var(--font-mono); font-size: 0.7rem; color: var(--accent-2); padding-top: 4px; }
+  .dd__title { font-family: var(--font-display); font-weight: 600; font-size: 0.98rem; }
+  .dd__sub { font-size: 0.78rem; color: var(--muted); line-height: 1.4; }
+  .dd__all { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-radius: 10px; font-family: var(--font-mono); font-size: 0.8rem; color: #fff; text-decoration: none; background: linear-gradient(90deg, rgba(124, 58, 237, 0.35), rgba(168, 85, 247, 0.08)); }
+  .dd__all svg { width: 16px; height: 16px; }
+  .dd__all:hover { color: #fff; filter: brightness(1.15); }
 
   @media (max-width: 760px) {
     .nav__toggle {
@@ -87,15 +139,19 @@ const links = [
       top: 72px;
       left: 0;
       right: 0;
+      max-height: calc(100vh - 72px);
+      overflow-y: auto;
       flex-direction: column;
       align-items: stretch;
       padding: 12px var(--gutter) 24px;
-      background: rgba(7, 6, 11, 0.97);
+      background: rgba(7, 6, 11, 0.98);
       border-bottom: 1px solid var(--line);
       display: none;
     }
     .nav__menu.is-open { display: flex; }
-    .nav__menu a:not(.btn) { padding: 14px 8px; font-size: 1rem; }
+    .nav__link, .dd__btn { padding: 14px 8px; font-size: 1rem; width: 100%; justify-content: space-between; }
+    .dd__panel { position: static; width: auto; transform: none; display: none; opacity: 1; visibility: visible; margin: 0 0 8px; box-shadow: none; }
+    .dd.is-open .dd__panel { display: block; transform: none; }
     .nav__cta { margin: 10px 0 0; justify-content: center; }
   }
 </style>
@@ -104,17 +160,45 @@ const links = [
   const nav = document.querySelector<HTMLElement>('[data-nav]');
   const toggle = document.querySelector<HTMLButtonElement>('[data-nav-toggle]');
   const menu = document.getElementById('nav-menu');
+  const dd = document.querySelector<HTMLElement>('[data-dd]');
+  const ddBtn = document.querySelector<HTMLButtonElement>('[data-dd-btn]');
+  const desktop = window.matchMedia('(min-width: 761px)');
+
+  const setDd = (open: boolean) => {
+    dd?.classList.toggle('is-open', open);
+    ddBtn?.setAttribute('aria-expanded', String(open));
+  };
+  const closeMenu = () => {
+    toggle?.setAttribute('aria-expanded', 'false');
+    menu?.classList.remove('is-open');
+    setDd(false);
+  };
+
   toggle?.addEventListener('click', () => {
     const open = toggle.getAttribute('aria-expanded') === 'true';
     toggle.setAttribute('aria-expanded', String(!open));
     menu?.classList.toggle('is-open', !open);
   });
-  menu?.querySelectorAll('a').forEach((a) =>
-    a.addEventListener('click', () => {
-      toggle?.setAttribute('aria-expanded', 'false');
-      menu.classList.remove('is-open');
-    })
-  );
+  ddBtn?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    setDd(!dd?.classList.contains('is-open'));
+  });
+  // open on hover for mouse users on desktop
+  let hoverTimer: number | undefined;
+  dd?.addEventListener('pointerenter', (e) => {
+    if (desktop.matches && e.pointerType === 'mouse') { window.clearTimeout(hoverTimer); setDd(true); }
+  });
+  dd?.addEventListener('pointerleave', (e) => {
+    if (desktop.matches && e.pointerType === 'mouse') hoverTimer = window.setTimeout(() => setDd(false), 180);
+  });
+  document.addEventListener('click', (e) => {
+    if (dd && !dd.contains(e.target as Node)) setDd(false);
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') { setDd(false); ddBtn?.focus(); }
+  });
+  menu?.querySelectorAll('a').forEach((a) => a.addEventListener('click', closeMenu));
+
   const onScroll = () => nav?.classList.toggle('is-scrolled', window.scrollY > 8);
   onScroll();
   window.addEventListener('scroll', onScroll, { passive: true });

@@ -118,6 +118,7 @@ const curve = Array.from({ length: 76 }, (_, d) => `${d ? 'L' : 'M'}${px(d).toFi
   .cvt__legend { list-style: none; padding: 0; margin: 18px 0 0; display: flex; flex-wrap: wrap; gap: 8px 22px; font-size: 0.84rem; color: var(--text-2); }
   .cvt__legend i { display: inline-block; width: 14px; height: 4px; border-radius: 2px; margin-right: 8px; vertical-align: middle; }
   @media (max-width: 760px) { .cvt__body { grid-template-columns: 1fr; } }
+  .cvt__legend li { font-size: inherit; color: inherit; margin: 0; line-height: 1.5; }
 </style>
 
 <script>

@@ -1,15 +1,16 @@
 ---
 // Shows how power flows through a mechanism, step by step.
 // paths: [{ name: "Drive (wheel spin)", steps: ["Motor", "HTD5 belt", ...] }]
-interface Props { paths: { name: string; note?: string; steps: string[] }[]; title?: string }
-const { paths, title } = Astro.props;
+// start: number shown on the first path badge (P1, P2, ...)
+interface Props { paths: { name: string; note?: string; steps: string[] }[]; title?: string; start?: number }
+const { paths, title, start = 1 } = Astro.props;
 ---
 <div class="pp reveal">
   {title && <p class="pp__title">{title}</p>}
   {paths.map((p, i) => (
     <div class="pp__path">
       <div class="pp__name">
-        <span class="pp__idx">P{i + 1}</span>
+        <span class="pp__idx">P{i + start}</span>
         <span>{p.name}</span>
       </div>
       <ol class="pp__steps">

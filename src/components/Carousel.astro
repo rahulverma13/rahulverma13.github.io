@@ -12,7 +12,7 @@ interface Slide {
   style: 'plate' | 'photo' | 'dark' | 'glow';
 }
 interface Props { slides: Slide[]; interval?: number }
-const { slides, interval = 5200 } = Astro.props;
+const { slides, interval = 3600 } = Astro.props;
 ---
 <div class="carousel" data-carousel data-interval={interval} aria-roledescription="carousel" aria-label="Featured projects">
   <div class="carousel__stage brackets">
@@ -151,7 +151,7 @@ const { slides, interval = 5200 } = Astro.props;
   document.querySelectorAll<HTMLElement>('[data-carousel]').forEach((root) => {
     const slides = [...root.querySelectorAll<HTMLAnchorElement>('[data-slide]')];
     const dots = [...root.querySelectorAll<HTMLButtonElement>('[data-dot]')];
-    const interval = Number(root.dataset.interval) || 5200;
+    const interval = Number(root.dataset.interval) || 3600;
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     root.style.setProperty('--dur', `${interval}ms`);
     let index = 0;
