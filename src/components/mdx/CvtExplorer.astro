@@ -3,8 +3,8 @@
 // One omni wheel, seen from above. The robot drives straight "up" the screen.
 const INIT = 52; // degrees; ≈ the 1.63× speed-up measured on the real robot
 const MAX = 75;
-const WR = 78; // pixel length of the motor-driven component (ωr)
-const O = { x: 170, y: 318 };
+const WR = 70; // pixel length of the motor-driven component (ωr)
+const O = { x: 170, y: 286 };
 
 function geom(deg: number) {
   const t = (deg * Math.PI) / 180;
@@ -33,7 +33,7 @@ const curve = Array.from({ length: 76 }, (_, d) => `${d ? 'L' : 'M'}${px(d).toFi
   </div>
 
   <div class="cvt__body">
-    <svg class="cvt__vec" viewBox="0 0 340 360" role="img" aria-labelledby="cvt-desc">
+    <svg class="cvt__vec" viewBox="0 0 340 330" role="img" aria-labelledby="cvt-desc">
       <desc id="cvt-desc">Top-down view of one omni wheel angled at θ from the direction of travel. The motor drives the wheel at a fixed surface speed ωr along its heading; the free rollers absorb the sideways component; the resulting robot velocity is ωr divided by cos θ.</desc>
       <defs>
         <marker id="ah-w" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#ffffff" /></marker>
@@ -41,9 +41,9 @@ const curve = Array.from({ length: 76 }, (_, d) => `${d ? 'L' : 'M'}${px(d).toFi
         <marker id="ah-t" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#5eead4" /></marker>
         <pattern id="cvt-grid" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M20 0H0V20" fill="none" stroke="rgba(176,140,255,.12)" /></pattern>
       </defs>
-      <rect width="340" height="360" fill="url(#cvt-grid)" />
+      <rect width="340" height="330" fill="url(#cvt-grid)" />
       <!-- direction of travel -->
-      <line x1={O.x} y1="370" x2={O.x} y2="10" stroke="rgba(255,255,255,.18)" stroke-dasharray="4 6" />
+      <line x1={O.x} y1="325" x2={O.x} y2="10" stroke="rgba(255,255,255,.18)" stroke-dasharray="4 6" />
       <text x={O.x + 8} y="22" class="cvt__axis">direction of travel</text>
       <!-- the wheel -->
       <g data-wheel transform={`rotate(${INIT} ${O.x} ${O.y})`}>

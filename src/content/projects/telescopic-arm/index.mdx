@@ -27,17 +27,19 @@ links:
 
 ## Overview
 
-<Grid template="minmax(0, 1fr) 232px" align="start">
+<Grid template="minmax(0, 1fr) 290px" align="start">
 <div>
 
 This arm is the main scoring mechanism of an FTC competition robot, and the most complex part on it. It does two things at once: it **extends** like a telescope and it **pivots** up and down, with both motions driven coaxially from motors mounted low on the robot.
 
 Instead of buying linear slides, I designed a **boxtube arm**: four nested, pocketed aluminum tubes from **2″ × 2″ down to 0.5″ × 0.5″**. Custom bearing inserts guide each stage, and cascade-strung cord extends all four stages at once.
 
-The hard part was making it **rigid**. Nested square tubes want to wobble, so most of the work was a long iteration loop on the inserts. The other hard part was **control**: an arm whose length changes also changes its center of mass and moment of inertia, which breaks a plain PID loop.
+The hard part was making it **rigid**. Nested square tubes want to wobble, so most of the work was a long iteration loop on the inserts. The other hard part was **control**: an arm whose length changes also changes its center of mass and moment of inertia, which breaks a plain PID loop. I solved that with a gain-scheduled feedforward controller that adapts to the arm's pose in real time.
+
+The result is a 395 g arm that reaches **full extension in 0.4 s** and pivots **90° in 0.25 s**, while staying **4× stiffer** than the off-the-shelf slides it replaced. In the video, it scores game pieces on the full competition robot.
 
 </div>
-<Video id="5_ZiCBP7eeU" title="Telescopic arm scoring on the full competition robot" vertical width="232px" caption="On the full robot" />
+<Video id="5_ZiCBP7eeU" title="Telescopic arm scoring on the full competition robot" vertical width="290px" caption="On the full robot" />
 </Grid>
 
 <Stats cols={3} items={[
@@ -53,7 +55,7 @@ The hard part was making it **rigid**. Nested square tubes want to wobble, so mo
 
 <Figure src="telescopic-arm/arm-cad.png" variant="plate" alt="CAD render of the full telescopic arm: pivot axle and spool at the base, four nested pocketed tubes, and pink bearing inserts at each stage" caption="Full arm in CAD, from the 32 mm pivot axle to the 0.5″ final stage" />
 
-<Grid template="minmax(0, 1fr) 200px" align="start">
+<Grid template="minmax(0, 1fr) 236px" align="start">
 <div>
 
 ### Key features
@@ -66,7 +68,7 @@ The hard part was making it **rigid**. Nested square tubes want to wobble, so mo
 - **4× stiffer** and **47% lighter** than linear slides (395 g vs. 758 g), in a compact **2″ × 2″** footprint
 
 </div>
-<Video id="D64In4TDJXU" title="Telescopic arm assembly" vertical width="200px" caption="Arm assembly" />
+<Video id="D64In4TDJXU" title="Telescopic arm assembly" vertical width="236px" caption="Arm assembly" />
 </Grid>
 
 ### Build
