@@ -88,8 +88,8 @@ const { slides, interval = 3600 } = Astro.props;
     color: inherit;
   }
   .carousel__slide.is-active { opacity: 1; visibility: visible; transition: opacity 0.9s var(--ease), visibility 0s; z-index: 1; }
-  .carousel__slide :global(img) { width: 100%; height: 100%; object-fit: cover; transform: scale(1.06); transition: transform 7s linear; }
-  .carousel__slide.is-active :global(img) { transform: scale(1); }
+  /* no zoom: the full photo is always shown, same framing as the project page */
+  .carousel__slide :global(img) { width: 100%; height: 100%; object-fit: cover; }
   .frame--plate :global(img), .frame--glow :global(img), .frame--dark :global(img) { object-fit: contain; }
   .frame--plate :global(img) { padding: 8% 8% 22%; }
   .frame--glow :global(img) { padding: 6% 6% 20%; }
