@@ -38,6 +38,10 @@ const { slides, interval = 3600 } = Astro.props;
           <span class="carousel__num">{s.num}</span>
           <span class="carousel__title">{s.title}</span>
           <span class="carousel__sub">{s.subtitle}</span>
+          <span class="carousel__cta" aria-hidden="true">
+            View project
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+          </span>
         </span>
       </a>
     ))}
@@ -98,9 +102,33 @@ const { slides, interval = 3600 } = Astro.props;
     bottom: 0;
     padding: 56px 22px 20px;
     display: grid;
-    gap: 2px;
+    grid-template-columns: 1fr auto;
+    column-gap: 16px;
+    align-items: end;
     background: linear-gradient(to top, rgba(7, 6, 11, 0.95) 20%, rgba(7, 6, 11, 0));
   }
+  .carousel__num, .carousel__title, .carousel__sub { grid-column: 1; }
+  .carousel__cta {
+    grid-column: 2;
+    grid-row: 1 / span 3;
+    align-self: end;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-radius: 999px;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: #fff;
+    background: linear-gradient(135deg, var(--accent), var(--accent-3));
+    box-shadow: 0 8px 26px -8px var(--accent-glow);
+    white-space: nowrap;
+    transition: transform 0.3s var(--ease), box-shadow 0.3s;
+  }
+  .carousel__cta svg { width: 15px; height: 15px; transition: transform 0.3s var(--ease); }
+  .carousel__slide:hover .carousel__cta { box-shadow: 0 10px 34px -6px rgba(168, 85, 247, 0.75); }
+  .carousel__slide:hover .carousel__cta svg { transform: translateX(4px); }
+  @media (max-width: 480px) { .carousel__cta { padding: 8px 12px; font-size: 0.72rem; } }
   .carousel__num { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.14em; color: var(--accent-2); }
   .carousel__title { font-family: var(--font-display); font-weight: 700; font-size: clamp(1.25rem, 2.4vw, 1.6rem); color: #fff; }
   .carousel__sub { color: var(--text-2); font-size: 0.92rem; }
